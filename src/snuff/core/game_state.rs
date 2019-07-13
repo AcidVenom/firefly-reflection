@@ -5,7 +5,7 @@ pub trait GameState
     fn on_enter(&mut self) -> ();
     fn on_leave(&mut self) -> ();
     fn update(&mut self, dt : f32) -> ();
-    fn draw(&mut self, frame : &mut glium::Frame, dt : f32) -> ();
+    fn draw(&mut self, frame : glium::Frame, dt : f32) -> glium::Frame;
 }
 
 pub struct GameStateManager
@@ -27,9 +27,9 @@ impl GameStateManager
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn add_state(&mut self, name : &String, state : Box<GameState>) -> ()
+    pub fn add_state(&mut self, name : String, state : Box<GameState>) -> ()
     {
-        if self.states.contains_key(name)
+        if self.states.contains_key(&name)
         {
             println!("[GameStateManager] Attempted to add a state with key '{}', but it already exists, skipping", name);
             return;
@@ -39,7 +39,7 @@ impl GameStateManager
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn switch(&mut self, name : &String)
+    pub fn switch(&mut self, name : String)
     {
         match self.get_current_state()
         {
@@ -47,7 +47,7 @@ impl GameStateManager
             None => {}
         }
 
-        match self.states.get_mut(name)
+        match self.states.get_mut(&name)
         {
             Some(s) => 
             {
@@ -73,19 +73,21 @@ impl GameStateManager
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn draw(&mut self, frame : &mut glium::Frame, dt : f32) -> ()
+    pub fn draw(&mut self, frame : glium::Frame, dt : f32) -> glium::Frame
     {
-        match self.get_current_state()
+        let drawn_frame = match self.get_current_state()
         {
-            Some(s) => s.draw(frame, dt),
-            None => {}
-        }
+            Some(s) => { s.draw(frame, dt) },
+            None => { frame }
+        };
+
+        drawn_frame
     }
 
     //---------------------------------------------------------------------------------------------------
     fn get_current_state(&mut self) -> Option<& mut GameState>
     {
-        if self.current_state.is_empty()
+        if !self.current_state.is_empty()
         {
             match self.states.get_mut(&self.current_state)
             {

@@ -49,7 +49,7 @@ impl Window
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn process_events(&mut self) -> bool
+    pub fn process_events(&mut self) -> bool
     {
         let mut closed = false;
         self.events_loop.poll_events(|evt|
@@ -69,7 +69,7 @@ impl Window
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn begin_frame(&mut self) -> glium::Frame
+    pub fn begin_frame(&mut self) -> glium::Frame
     {
         let mut target = self.gl_display.draw();
         target.clear_color(0.1, 0.33, 1.0, 1.0);
@@ -78,20 +78,8 @@ impl Window
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn end_frame(&mut self, target : glium::Frame) -> ()
+    pub fn end_frame(&mut self, target : glium::Frame) -> ()
     {
         target.finish().unwrap();
-    }
-
-    //---------------------------------------------------------------------------------------------------
-    pub fn exec(&mut self) -> u8
-    {
-        while self.process_events()
-        {
-            let target = self.begin_frame();
-            self.end_frame(target)
-        }
-
-        return 0;
     }
 }

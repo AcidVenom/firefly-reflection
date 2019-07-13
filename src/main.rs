@@ -1,34 +1,69 @@
 #[macro_use]
 extern crate glium;
+use glium::Surface;
 
 mod snuff;
 
 struct TestState
 {
-    id : u8
+    test_mesh : snuff::gfx::Mesh,
+    shader_program : glium::Program
+}
+
+impl TestState
+{
+    fn new(window : &mut snuff::core::Window) -> TestState
+    {
+        let vertex_shader_src = r#"
+            #version 140
+
+            in vec2 position;
+
+            void main() {
+                gl_Position = vec4(position, 0.0, 1.0);
+            }
+        "#;
+
+        let fragment_shader_src = r#"
+            #version 140
+
+            out vec4 color;
+
+            void main() {
+                color = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        "#;
+
+        TestState
+        {
+            test_mesh : snuff::gfx::Mesh::create_quad(window.gl_display(), true),
+            shader_program : glium::Program::from_source(window.gl_display(), vertex_shader_src, fragment_shader_src, None).unwrap()
+        }
+    }
 }
 
 impl snuff::core::GameState for TestState
 {
     fn on_enter(&mut self) -> ()
     {
-        println!("Entering test state {}..", self.id);
     }
 
     fn on_leave(&mut self) -> ()
     {
-        println!("Leaving test state {}..", self.id);
     }
 
     fn update(&mut self, dt : f32) -> ()
     {
-        println!("Updating test state {}..", self.id);
     }
 
-    fn draw(&mut self, frame : glium::Frame, dt : f32) -> glium::Frame
+    fn draw(&mut self, frame : &mut glium::Frame, dt : f32)
     {
-        println!("Drawing test state {}..", self.id);
-        frame
+        frame.draw(
+            &self.test_mesh.vertex_buffer, 
+            &self.test_mesh.index_buffer, 
+            &self.shader_program, 
+            &glium::uniforms::EmptyUniforms, 
+            &Default::default()).unwrap();
     }
 }
 
@@ -37,23 +72,18 @@ fn main()
     let mut window = snuff::core::Window::new(1280, 720, "Firefly - Reflection");
     let mut game_state_manager = snuff::core::GameStateManager::new();
 
-    let test_state_a = Box::new(TestState{ id: 0 });
-    let test_state_b = Box::new(TestState{ id: 1 });
-
-    game_state_manager.add_state(String::from("TestStateA"), test_state_a);
-    game_state_manager.add_state(String::from("TestStateB"), test_state_b);
-
-    game_state_manager.switch(String::from("TestStateA"));
-    game_state_manager.switch(String::from("TestStateB"));
+    let test_state = Box::new(TestState::new(&mut window));
+    game_state_manager.add_state(String::from("TestState"), test_state);
+    game_state_manager.switch(String::from("TestState"));
 
     let mut frame_count = 0;
-    while window.process_events() && frame_count < 2
+    while window.process_events()
     {
         game_state_manager.update(0.0);
 
         let mut target = window.begin_frame();
 
-        target = game_state_manager.draw(target, 0.0);
+        game_state_manager.draw(&mut target, 0.0);
 
         window.end_frame(target);
 

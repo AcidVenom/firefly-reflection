@@ -5,7 +5,7 @@ pub trait GameState
     fn on_enter(&mut self) -> ();
     fn on_leave(&mut self) -> ();
     fn update(&mut self, dt : f32) -> ();
-    fn draw(&mut self, frame : glium::Frame, dt : f32) -> glium::Frame;
+    fn draw(&mut self, frame : &mut glium::Frame, dt : f32) -> ();
 }
 
 pub struct GameStateManager
@@ -39,7 +39,7 @@ impl GameStateManager
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn switch(&mut self, name : String)
+    pub fn switch(&mut self, name : String) -> ()
     {
         match self.get_current_state()
         {
@@ -73,15 +73,13 @@ impl GameStateManager
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn draw(&mut self, frame : glium::Frame, dt : f32) -> glium::Frame
+    pub fn draw(&mut self, frame : &mut glium::Frame, dt : f32) -> ()
     {
         let drawn_frame = match self.get_current_state()
         {
             Some(s) => { s.draw(frame, dt) },
-            None => { frame }
+            None => {}
         };
-
-        drawn_frame
     }
 
     //---------------------------------------------------------------------------------------------------

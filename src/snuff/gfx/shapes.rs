@@ -8,8 +8,8 @@ implement_vertex!(Vertex2D, position);
 
 pub struct Mesh
 {
-    vertex_buffer : glium::VertexBuffer<Vertex2D>,
-    index_buffer : glium::IndexBuffer<u16>
+    pub vertex_buffer : glium::VertexBuffer<Vertex2D>,
+    pub index_buffer : glium::IndexBuffer<u16>
 }
 
 impl Mesh

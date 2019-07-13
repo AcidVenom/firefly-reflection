@@ -1,5 +1,3 @@
-extern crate glium;
-
 pub struct Window
 {
     client_width : u16,
@@ -9,6 +7,7 @@ pub struct Window
 }
 
 use glium::glutin;
+use glium::Surface;
 
 impl Window
 {
@@ -29,6 +28,12 @@ impl Window
             events_loop: events_loop,
             gl_display: display
         }
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn gl_display(&mut self) -> &mut glium::Display
+    {
+        &mut self.gl_display
     }
 
     //---------------------------------------------------------------------------------------------------
@@ -64,10 +69,18 @@ impl Window
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn swap_buffers(&mut self) -> bool
+    fn begin_frame(&mut self) -> glium::Frame
     {
-        let res = self.gl_display.swap_buffers();
-        return res.is_ok();
+        let mut target = self.gl_display.draw();
+        target.clear_color(0.1, 0.33, 1.0, 1.0);
+
+        target
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    fn end_frame(&mut self, target : glium::Frame) -> ()
+    {
+        target.finish().unwrap();
     }
 
     //---------------------------------------------------------------------------------------------------
@@ -75,11 +88,8 @@ impl Window
     {
         while self.process_events()
         {
-            if !self.swap_buffers()
-            {
-                println!("[Window] Could not swap buffers!");
-                return 1;
-            }
+            let target = self.begin_frame();
+            self.end_frame(target)
         }
 
         return 0;

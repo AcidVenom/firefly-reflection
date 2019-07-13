@@ -1,7 +1,3 @@
 mod shapes;
 
-pub use
-{
-    shapes::Vertex2D,
-    shapes::Mesh
-};
+pub use {shapes::Mesh, shapes::Vertex2D};

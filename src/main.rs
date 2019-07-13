@@ -4,16 +4,13 @@ use glium::Surface;
 
 mod snuff;
 
-struct TestState
-{
-    test_mesh : snuff::gfx::Mesh,
-    shader_program : glium::Program
+struct TestState {
+    test_mesh: snuff::gfx::Mesh,
+    shader_program: glium::Program,
 }
 
-impl TestState
-{
-    fn new(window : &mut snuff::core::Window) -> TestState
-    {
+impl TestState {
+    fn new(window: &mut snuff::core::Window) -> TestState {
         let vertex_shader_src = r#"
             #version 140
 
@@ -34,41 +31,40 @@ impl TestState
             }
         "#;
 
-        TestState
-        {
-            test_mesh : snuff::gfx::Mesh::create_quad(window.gl_display(), true),
-            shader_program : glium::Program::from_source(window.gl_display(), vertex_shader_src, fragment_shader_src, None).unwrap()
+        TestState {
+            test_mesh: snuff::gfx::Mesh::create_quad(window.display(), true),
+            shader_program: glium::Program::from_source(
+                window.display(),
+                vertex_shader_src,
+                fragment_shader_src,
+                None,
+            )
+            .unwrap(),
         }
     }
 }
 
-impl snuff::core::GameState for TestState
-{
-    fn on_enter(&mut self) -> ()
-    {
-    }
+impl snuff::core::GameState for TestState {
+    fn on_enter(&mut self) {}
 
-    fn on_leave(&mut self) -> ()
-    {
-    }
+    fn on_leave(&mut self) {}
 
-    fn update(&mut self, dt : f32) -> ()
-    {
-    }
+    fn update(&mut self, dt: f32) {}
 
-    fn draw(&mut self, frame : &mut glium::Frame, dt : f32)
-    {
-        frame.draw(
-            &self.test_mesh.vertex_buffer, 
-            &self.test_mesh.index_buffer, 
-            &self.shader_program, 
-            &glium::uniforms::EmptyUniforms, 
-            &Default::default()).unwrap();
+    fn draw(&mut self, frame: &mut glium::Frame, dt: f32) {
+        frame
+            .draw(
+                &self.test_mesh.vertex_buffer,
+                &self.test_mesh.index_buffer,
+                &self.shader_program,
+                &glium::uniforms::EmptyUniforms,
+                &Default::default(),
+            )
+            .unwrap();
     }
 }
 
-fn main()
-{
+fn main() {
     let mut window = snuff::core::Window::new(1280, 720, "Firefly - Reflection");
     let mut game_state_manager = snuff::core::GameStateManager::new();
 
@@ -77,8 +73,7 @@ fn main()
     game_state_manager.switch(String::from("TestState"));
 
     let mut frame_count = 0;
-    while window.process_events()
-    {
+    while window.process_events() {
         game_state_manager.update(0.0);
 
         let mut target = window.begin_frame();
@@ -87,6 +82,6 @@ fn main()
 
         window.end_frame(target);
 
-        frame_count = frame_count + 1;
+        frame_count += 1;
     }
 }

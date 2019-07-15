@@ -9,7 +9,7 @@ mod snuff;
 struct TestState {
     test_mesh: snuff::gfx::Mesh,
     shader_program: snuff::gfx::ShaderProgram,
-    angle: f32
+    angle: f32,
 }
 
 impl TestState {
@@ -22,7 +22,7 @@ impl TestState {
                 "assets/shaders/simple.fs",
             )
             .unwrap(),
-            angle: 0.0
+            angle: 0.0,
         }
     }
 }
@@ -41,16 +41,27 @@ impl snuff::core::GameState for TestState {
         let ortho_size = 5.0;
         let half_size = ortho_size * 0.5;
 
-        let rot = nalgebra_glm::rotate(&nalgebra_glm::identity(), self.angle, &nalgebra_glm::vec3(0.0, 0.0, 1.0));
-        let m = rot * nalgebra_glm::ortho_lh(-half_size, half_size, -half_size * aspect, half_size * aspect, 0.01, 100.0);
-        
+        let rot = nalgebra_glm::rotate(
+            &nalgebra_glm::identity(),
+            self.angle,
+            &nalgebra_glm::vec3(0.0, 0.0, 1.0),
+        );
+        let m = rot
+            * nalgebra_glm::ortho_lh(
+                -half_size,
+                half_size,
+                -half_size * aspect,
+                half_size * aspect,
+                0.01,
+                100.0,
+            );
+
         let r1 = m.row(0);
         let r2 = m.row(1);
         let r3 = m.row(2);
         let r4 = m.row(3);
 
-        let uniforms = uniform!
-        {
+        let uniforms = uniform! {
             matrix: [
                 [ r1[0] as f32, r1[1] as f32, r1[2] as f32, r1[3] as f32 ],
                 [ r2[0] as f32, r2[1] as f32, r2[2] as f32, r2[3] as f32 ],

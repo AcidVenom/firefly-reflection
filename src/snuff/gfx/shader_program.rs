@@ -24,19 +24,25 @@ impl ShaderProgram {
         vs_file: &'a str,
         fs_file: &'a str,
     ) -> Result<ShaderProgram, glium::ProgramCreationError> {
-        
-        let vs_contents = std::fs::read_to_string(vs_file)
-            .expect(&format!("[ShaderProgram] Could not open vertex shader file '{}'", vs_file)[..]);
+        let vs_contents = std::fs::read_to_string(vs_file).expect(
+            &format!(
+                "[ShaderProgram] Could not open vertex shader file '{}'",
+                vs_file
+            )[..],
+        );
 
-        let fs_contents = std::fs::read_to_string(fs_file)
-            .expect(&format!("[ShaderProgram] Could not open fragment shader file '{}'", fs_file)[..]);
+        let fs_contents = std::fs::read_to_string(fs_file).expect(
+            &format!(
+                "[ShaderProgram] Could not open fragment shader file '{}'",
+                fs_file
+            )[..],
+        );
 
         ShaderProgram::from_string(display, &vs_contents, &fs_contents)
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn program(&self) -> &glium::Program
-    {
+    pub fn program(&self) -> &glium::Program {
         &self.program
     }
 }

@@ -24,12 +24,27 @@ fn calculate_delta_time(old_time: std::time::Instant) -> DeltaTime {
 
 impl GameLoop {
     //---------------------------------------------------------------------------------------------------
+    fn set_working_directory() {
+        let args: Vec<String> = std::env::args().collect();
+        if args.len() > 1 {
+            let working_dir = args[1].clone();
+            assert!(
+                std::env::set_current_dir(&working_dir).is_ok(),
+                format!("[main] Invalid working directory '{}'", working_dir)
+            );
+            println!("[main] Set working directory to '{}'", working_dir);
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------
     pub fn new(
         window_width: u16,
         window_height: u16,
         window_title: &'static str,
         vsync: bool,
     ) -> GameLoop {
+        GameLoop::set_working_directory();
+
         GameLoop {
             window: core::Window::new(window_width, window_height, window_title, vsync),
             game_state_manager: core::GameStateManager::new(),

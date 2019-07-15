@@ -48,14 +48,12 @@ impl Mesh {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn vertex_buffer(&self) -> &glium::VertexBuffer<Vertex2D>
-    {
+    pub fn vertex_buffer(&self) -> &glium::VertexBuffer<Vertex2D> {
         &self.vertex_buffer
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn index_buffer(&self) -> &glium::IndexBuffer<u16>
-    {
+    pub fn index_buffer(&self) -> &glium::IndexBuffer<u16> {
         &self.index_buffer
     }
 }

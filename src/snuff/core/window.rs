@@ -10,7 +10,7 @@ use glium::Surface;
 
 impl Window {
     //---------------------------------------------------------------------------------------------------
-    pub fn new(width: u16, height: u16, title: &'static str. vsync : bool) -> Window {
+    pub fn new(width: u16, height: u16, title: &'static str, vsync : bool) -> Window {
         let events_loop = glutin::EventsLoop::new();
         let wb = glutin::WindowBuilder::new()
             .with_dimensions((u32::from(width), u32::from(height)).into())

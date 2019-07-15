@@ -24,7 +24,12 @@ fn calculate_delta_time(old_time: std::time::Instant) -> DeltaTime {
 
 impl GameLoop {
     //---------------------------------------------------------------------------------------------------
-    pub fn new(window_width: u16, window_height: u16, window_title: &'static str, vsync : bool) -> GameLoop {
+    pub fn new(
+        window_width: u16,
+        window_height: u16,
+        window_title: &'static str,
+        vsync: bool,
+    ) -> GameLoop {
         GameLoop {
             window: core::Window::new(window_width, window_height, window_title, vsync),
             game_state_manager: core::GameStateManager::new(),

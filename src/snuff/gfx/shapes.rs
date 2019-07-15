@@ -6,8 +6,8 @@ pub struct Vertex2D {
 implement_vertex!(Vertex2D, position);
 
 pub struct Mesh {
-    pub vertex_buffer: glium::VertexBuffer<Vertex2D>,
-    pub index_buffer: glium::IndexBuffer<u16>,
+    vertex_buffer: glium::VertexBuffer<Vertex2D>,
+    index_buffer: glium::IndexBuffer<u16>,
 }
 
 impl Mesh {
@@ -45,5 +45,17 @@ impl Mesh {
         let indices = vec![0, 1, 2, 2, 1, 3];
 
         Mesh::new(display, vertices, indices)
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn vertex_buffer(&self) -> &glium::VertexBuffer<Vertex2D>
+    {
+        &self.vertex_buffer
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn index_buffer(&self) -> &glium::IndexBuffer<u16>
+    {
+        &self.index_buffer
     }
 }

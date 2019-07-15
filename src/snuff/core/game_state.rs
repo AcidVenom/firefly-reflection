@@ -22,25 +22,25 @@ impl GameStateManager {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn add_state(&mut self, name: String, state: Box<GameState>) {
-        if self.states.contains_key(&name) {
+    pub fn add_state<'a>(&mut self, name: &'a str, state: Box<GameState>) {
+        if self.states.contains_key(name) {
             println!("[GameStateManager] Attempted to add a state with key '{}', but it already exists, skipping", name);
             return;
         }
 
-        self.states.insert(name.clone(), state);
+        self.states.insert(String::from(name), state);
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn switch(&mut self, name: String) {
+    pub fn switch<'a>(&mut self, name: &'a str) {
         if let Some(s) = self.get_current_state() {
             s.on_leave();
         }
 
-        match self.states.get_mut(&name) {
+        match self.states.get_mut(name) {
             Some(s) => {
                 s.on_enter();
-                self.current_state = name.clone();
+                self.current_state = String::from(name);
             }
 
             None => {

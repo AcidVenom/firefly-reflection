@@ -49,7 +49,9 @@ impl snuff::core::GameState for TestState {
 
     fn on_leave(&mut self) {}
 
-    fn update(&mut self, dt: f32) {}
+    fn update(&mut self, dt: f32) {
+        println!("{}", dt);
+    }
 
     fn draw(&mut self, frame: &mut glium::Frame, dt: f32) {
         frame
@@ -65,23 +67,14 @@ impl snuff::core::GameState for TestState {
 }
 
 fn main() {
-    let mut window = snuff::core::Window::new(1280, 720, "Firefly - Reflection");
-    let mut game_state_manager = snuff::core::GameStateManager::new();
+    let mut game_loop = snuff::core::GameLoop::new(1280, 720, "Firefly - Reflection", true);
 
-    let test_state = Box::new(TestState::new(&mut window));
+    let window = game_loop.window();
+    let test_state = Box::new(TestState::new(window));
+
+    let game_state_manager = game_loop.game_state_manager();
     game_state_manager.add_state(String::from("TestState"), test_state);
     game_state_manager.switch(String::from("TestState"));
 
-    let mut frame_count = 0;
-    while window.process_events() {
-        game_state_manager.update(0.0);
-
-        let mut target = window.begin_frame();
-
-        game_state_manager.draw(&mut target, 0.0);
-
-        window.end_frame(target);
-
-        frame_count += 1;
-    }
+    game_loop.exec();
 }

@@ -33,8 +33,9 @@ impl GameStateManager {
 
     //---------------------------------------------------------------------------------------------------
     pub fn switch(&mut self, name: String) {
-        
-        if let Some(s) = self.get_current_state() { s.on_leave(); }
+        if let Some(s) = self.get_current_state() {
+            s.on_leave();
+        }
 
         match self.states.get_mut(&name) {
             Some(s) => {
@@ -50,12 +51,16 @@ impl GameStateManager {
 
     //---------------------------------------------------------------------------------------------------
     pub fn update(&mut self, dt: f32) {
-        if let Some(s) = self.get_current_state() { s.update(dt); }
+        if let Some(s) = self.get_current_state() {
+            s.update(dt);
+        }
     }
 
     //---------------------------------------------------------------------------------------------------
     pub fn draw(&mut self, frame: &mut glium::Frame, dt: f32) {
-        if let Some(s) = self.get_current_state() { s.draw(frame, dt); }
+        if let Some(s) = self.get_current_state() {
+            s.draw(frame, dt);
+        }
     }
 
     //---------------------------------------------------------------------------------------------------

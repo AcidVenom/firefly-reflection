@@ -10,13 +10,13 @@ use glium::Surface;
 
 impl Window {
     //---------------------------------------------------------------------------------------------------
-    pub fn new(width: u16, height: u16, title: &'static str) -> Window {
+    pub fn new(width: u16, height: u16, title: &'static str. vsync : bool) -> Window {
         let events_loop = glutin::EventsLoop::new();
         let wb = glutin::WindowBuilder::new()
             .with_dimensions((u32::from(width), u32::from(height)).into())
             .with_title(title);
 
-        let cb = glutin::ContextBuilder::new();
+        let cb = glutin::ContextBuilder::new().with_vsync(vsync);
         let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
         Window {
@@ -66,6 +66,10 @@ impl Window {
 
     //---------------------------------------------------------------------------------------------------
     pub fn end_frame(&mut self, target: glium::Frame) {
-        target.finish().unwrap();
+        match target.finish()
+        {
+            Ok(_) => {},
+            Err(e) => println!("[Window] Could not swap buffers in 'end_frame' : {}", e)
+        }
     }
 }

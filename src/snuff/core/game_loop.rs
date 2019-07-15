@@ -7,14 +7,14 @@ pub struct GameLoop {
 }
 
 struct DeltaTime {
-    new_time: std::time::Instant,
+    new_time: u64,
     new_dt: f32,
 }
 
 //---------------------------------------------------------------------------------------------------
-fn calculate_delta_time(old_time: std::time::Instant) -> DeltaTime {
-    let new_time = std::time::Instant::now();
-    let new_dt = new_time.duration_since(old_time).as_millis() as f64 * 1e-3;
+fn calculate_delta_time(old_time: u64) -> DeltaTime {
+    let new_time = time::precise_time_ns();
+    let new_dt = (new_time - old_time) as f64 * 1e-9;
 
     DeltaTime {
         new_time,
@@ -72,7 +72,7 @@ impl GameLoop {
 
     //---------------------------------------------------------------------------------------------------
     pub fn exec(&mut self) {
-        let mut old_time = std::time::Instant::now();
+        let mut old_time = time::precise_time_ns();
         let mut dt = 0.0;
 
         while self.window.process_events() {

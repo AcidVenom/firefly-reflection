@@ -17,7 +17,7 @@ fn calculate_delta_time(old_time: std::time::Instant) -> DeltaTime {
     let new_dt = new_time.duration_since(old_time).as_millis() as f64 * 1e-3;
 
     DeltaTime {
-        new_time: new_time,
+        new_time,
         new_dt: new_dt as f32,
     }
 }

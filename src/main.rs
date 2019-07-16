@@ -41,13 +41,11 @@ impl snuff::core::GameState for TestState {
         let ortho_size = 5.0;
         let half_size = ortho_size * 0.5;
 
-        let rot = nalgebra_glm::rotate(
-            &nalgebra_glm::identity(),
-            self.angle,
-            &nalgebra_glm::vec3(0.0, 0.0, 1.0),
-        );
-        let m = rot
-            * nalgebra_glm::ortho_lh(
+        let mut transform = snuff::core::Transform::new();
+        transform.roll(self.angle)
+                    .set_translation_f(self.angle.sin() * 0.5, 0.0, 1.0);
+
+        let m1 = nalgebra_glm::ortho_lh(
                 -half_size,
                 half_size,
                 -half_size * aspect,
@@ -56,10 +54,13 @@ impl snuff::core::GameState for TestState {
                 100.0,
             );
 
-        let r1 = m.row(0);
-        let r2 = m.row(1);
-        let r3 = m.row(2);
-        let r4 = m.row(3);
+        let m2 = transform.local_to_world();
+        let m = m1 * m2;
+
+        let r1 = m.column(0);
+        let r2 = m.column(1);
+        let r3 = m.column(2);
+        let r4 = m.column(3);
 
         let uniforms = uniform! {
             matrix: [

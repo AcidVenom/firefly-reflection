@@ -2,14 +2,13 @@
 extern crate glium;
 extern crate time;
 
-use glium::Surface;
-
 mod snuff;
 
 struct TestState {
     test_mesh: snuff::gfx::Mesh,
     shader_program: snuff::gfx::ShaderProgram,
     angle: f32,
+    camera : snuff::core::Camera
 }
 
 impl TestState {
@@ -23,63 +22,29 @@ impl TestState {
             )
             .unwrap(),
             angle: 0.0,
+            camera : snuff::core::Camera::new()
         }
     }
 }
 
 impl snuff::core::GameState for TestState {
-    fn on_enter(&mut self) {}
+    fn on_enter(&mut self) {
+        self.camera.set_orthographic_size(5.0, 720.0 / 1280.0)
+                    .transform().set_translation_f(0.0, 0.0, 0.0);
+    }
 
     fn on_leave(&mut self) {}
 
     fn update(&mut self, dt: f32) {}
 
-    fn draw(&mut self, frame: &mut glium::Frame, dt: f32) {
+    fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32) {
         self.angle += dt * 3.14159;
-
-        let aspect = 720.0 / 1280.0;
-        let ortho_size = 5.0;
-        let half_size = ortho_size * 0.5;
 
         let mut transform = snuff::core::Transform::new();
         transform.roll(self.angle)
                     .set_translation_f(self.angle.sin() * 0.5, 0.0, 1.0);
 
-        let m1 = nalgebra_glm::ortho_lh(
-                -half_size,
-                half_size,
-                -half_size * aspect,
-                half_size * aspect,
-                0.01,
-                100.0,
-            );
-
-        let m2 = transform.local_to_world();
-        let m = m1 * m2;
-
-        let r1 = m.column(0);
-        let r2 = m.column(1);
-        let r3 = m.column(2);
-        let r4 = m.column(3);
-
-        let uniforms = uniform! {
-            matrix: [
-                [ r1[0] as f32, r1[1] as f32, r1[2] as f32, r1[3] as f32 ],
-                [ r2[0] as f32, r2[1] as f32, r2[2] as f32, r2[3] as f32 ],
-                [ r3[0] as f32, r3[1] as f32, r3[2] as f32, r3[3] as f32 ],
-                [ r4[0] as f32, r4[1] as f32, r4[2] as f32, r4[3] as f32 ]
-            ]
-        };
-
-        frame
-            .draw(
-                self.test_mesh.vertex_buffer(),
-                self.test_mesh.index_buffer(),
-                self.shader_program.program(),
-                &uniforms,
-                &Default::default(),
-            )
-            .unwrap();
+        command_buffer.draw(&mut self.camera, &self.test_mesh, &mut transform, &self.shader_program)
     }
 }
 

@@ -58,7 +58,7 @@ impl GameLoop {
 
         self.game_state_manager.draw(&mut target, dt);
 
-        self.window.end_frame(target);
+        target.end();
     }
 
     //---------------------------------------------------------------------------------------------------

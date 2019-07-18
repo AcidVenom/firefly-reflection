@@ -1,10 +1,11 @@
+use crate::snuff;
 use std::collections::HashMap;
 
 pub trait GameState {
     fn on_enter(&mut self);
     fn on_leave(&mut self);
     fn update(&mut self, dt: f32);
-    fn draw(&mut self, frame: &mut glium::Frame, dt: f32);
+    fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32);
 }
 
 pub struct GameStateManager {
@@ -57,9 +58,9 @@ impl GameStateManager {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn draw(&mut self, frame: &mut glium::Frame, dt: f32) {
+    pub fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32) {
         if let Some(s) = self.get_current_state() {
-            s.draw(frame, dt);
+            s.draw(command_buffer, dt);
         }
     }
 

@@ -56,7 +56,7 @@ impl Camera {
         if self.is_dirty {
             self.projection = if self.is_orthographic {
                 let half_size = self.dimensions * 0.5;
-                nalgebra_glm::ortho_lh(-half_size.x, half_size.y, half_size.x, -half_size.y, self.near_plane, self.far_plane)
+                nalgebra_glm::ortho_lh(-half_size.x, half_size.x, -half_size.y, half_size.y, self.near_plane, self.far_plane)
             }
             else {
                 nalgebra_glm::perspective_fov_lh(self.fov, self.dimensions.x, self.dimensions.y, self.near_plane, self.far_plane)
@@ -74,7 +74,8 @@ impl Camera {
     //---------------------------------------------------------------------------------------------------
     pub fn set_orthographic_size_both(&mut self, size : &nalgebra_glm::Vec2) -> &mut Camera {
         self.dimensions = *size;
-        self.mark_dirty();
+
+        self.set_orthographic(true);
 
         self
     }
@@ -82,7 +83,8 @@ impl Camera {
     //---------------------------------------------------------------------------------------------------
     pub fn set_orthographic_size_both_f(&mut self, width : f32, height : f32) -> &mut Camera {
         self.dimensions = nalgebra_glm::vec2(width, height);
-        self.mark_dirty();
+
+        self.set_orthographic(true);
 
         self
     }
@@ -92,6 +94,8 @@ impl Camera {
         self.dimensions.x = size;
         self.dimensions.y = size * height_over_width;
 
+        self.set_orthographic(true);
+
         self.mark_dirty();
 
         self
@@ -100,7 +104,8 @@ impl Camera {
     //---------------------------------------------------------------------------------------------------
     pub fn set_perspective_size(&mut self, size : &nalgebra_glm::Vec2) -> &mut Camera {
         self.dimensions = *size;
-        self.mark_dirty();
+
+        self.set_orthographic(false);
 
         self
     }
@@ -108,7 +113,8 @@ impl Camera {
     //---------------------------------------------------------------------------------------------------
     pub fn set_fov(&mut self, fov : f32) -> &mut Camera {
         self.fov = fov;
-        self.mark_dirty();
+
+        self.set_orthographic(false);
 
         self
     }

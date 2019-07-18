@@ -1,12 +1,14 @@
+use crate::snuff;
+use crate::snuff::gfx::CommandBuffer;
+
+use glium::glutin;
+
 pub struct Window {
     client_width: u16,
     client_height: u16,
     events_loop: glium::glutin::EventsLoop,
     display: glium::Display,
 }
-
-use glium::glutin;
-use glium::Surface;
 
 impl Window {
     //---------------------------------------------------------------------------------------------------
@@ -57,18 +59,7 @@ impl Window {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn begin_frame(&mut self) -> glium::Frame {
-        let mut target = self.display.draw();
-        target.clear_color(0.1, 0.33, 1.0, 1.0);
-
-        target
-    }
-
-    //---------------------------------------------------------------------------------------------------
-    pub fn end_frame(&mut self, target: glium::Frame) {
-        match target.finish() {
-            Ok(_) => {}
-            Err(e) => println!("[Window] Could not swap buffers in 'end_frame' : {}", e),
-        }
+    pub fn begin_frame(&mut self) -> CommandBuffer {
+        snuff::gfx::CommandBuffer::new(&self.display)
     }
 }

@@ -17,7 +17,7 @@ impl TestState {
     fn new(window: &mut snuff::core::Window) -> TestState {
         TestState {
             test_mesh: snuff::gfx::Mesh::create_quad(window.display(), true),
-            test_texture: snuff::gfx::Texture2D::from_data(window.display(), &vec![0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 255], 2, 2),
+            test_texture: snuff::gfx::Texture2D::from_data(window.display(), &vec![0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 255], 2, 2).with_nearest_filter(),
             shader_program: snuff::gfx::ShaderProgram::from_source(
                 window.display(),
                 "assets/shaders/simple.vs",

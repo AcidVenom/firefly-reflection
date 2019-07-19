@@ -30,14 +30,15 @@ impl CommandBuffer {
         shader: &snuff::gfx::ShaderProgram,
         textures: &mut Vec<&snuff::gfx::Texture2D>
     ) {
+        let filtering = textures[0].filtering();
         let uniforms = uniform! {
             model: CommandBuffer::matrix_to_uniform(&transform.local_to_world()),
             view: CommandBuffer::matrix_to_uniform(&camera.view()),
             projection: CommandBuffer::matrix_to_uniform(&camera.projection()),
             tex0: glium::uniforms::Sampler(textures[0].texture(), glium::uniforms::SamplerBehavior {
                 wrap_function: (glium::uniforms::SamplerWrapFunction::Repeat, glium::uniforms::SamplerWrapFunction::Repeat, glium::uniforms::SamplerWrapFunction::Repeat),
-                minify_filter: glium::uniforms::MinifySamplerFilter::Nearest,
-                magnify_filter: glium::uniforms::MagnifySamplerFilter::Nearest,
+                minify_filter: filtering.0,
+                magnify_filter: filtering.1,
                 depth_texture_comparison: None,
                 max_anisotropy: 1,
             })

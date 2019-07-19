@@ -3,7 +3,9 @@ use glium::texture;
 
 pub struct Texture2D {
     texture: glium::texture::Texture2d,
-    dimensions: nalgebra_glm::U16Vec2
+    dimensions: nalgebra_glm::U16Vec2,
+    min_filter : glium::uniforms::MinifySamplerFilter,
+    max_filter : glium::uniforms::MagnifySamplerFilter
 }
 
 type ImageData = Vec<u8>;
@@ -14,7 +16,9 @@ impl Texture2D {
         let image = glium::texture::RawImage2d::from_raw_rgba_reversed(data, (width as u32, height as u32).into());
         Texture2D {
             texture: glium::texture::Texture2d::new(display, image).unwrap(),
-            dimensions: nalgebra_glm::vec2(width, height)
+            dimensions: nalgebra_glm::vec2(width, height),
+            min_filter: glium::uniforms::MinifySamplerFilter::Linear,
+            max_filter: glium::uniforms::MagnifySamplerFilter::Linear
         }
     }
 
@@ -35,5 +39,18 @@ impl Texture2D {
     //---------------------------------------------------------------------------------------------------
     pub fn texture(&self) -> &glium::texture::Texture2d {
         &self.texture
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn with_nearest_filter(mut self) -> Texture2D {
+        self.min_filter = glium::uniforms::MinifySamplerFilter::Nearest;
+        self.max_filter = glium::uniforms::MagnifySamplerFilter::Nearest;
+
+        self
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn filtering(&self) -> (glium::uniforms::MinifySamplerFilter, glium::uniforms::MagnifySamplerFilter) {
+        (self.min_filter, self.max_filter)
     }
 }

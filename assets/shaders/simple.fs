@@ -1,8 +1,12 @@
-#version 140
+#version 330
 
-out vec4 color;
+in vec2 UV;
+
+out vec4 diffuse;
+
+uniform sampler2D tex0;
 
 void main()
 {
-    color = vec4(1.0, 1.0, 1.0, 1.0);
+    diffuse = texture(tex0, UV);
 }

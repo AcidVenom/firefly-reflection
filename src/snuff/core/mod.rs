@@ -1,14 +1,10 @@
+mod camera;
 mod game_loop;
 mod game_state;
-mod window;
 mod transform;
-mod camera;
+mod window;
 
 pub use {
-    game_loop::GameLoop, 
-    game_state::GameState, 
-    game_state::GameStateManager, 
-    window::Window,
-    transform::Transform,
-    camera::Camera
+    camera::Camera, game_loop::GameLoop, game_state::GameState, game_state::GameStateManager,
+    transform::Transform, window::Window,
 };

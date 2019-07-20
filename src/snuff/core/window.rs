@@ -8,6 +8,7 @@ pub struct Window {
     client_height: u16,
     events_loop: glium::glutin::EventsLoop,
     display: glium::Display,
+    default_texture : snuff::gfx::Texture2D
 }
 
 impl Window {
@@ -21,11 +22,14 @@ impl Window {
         let cb = glutin::ContextBuilder::new().with_vsync(vsync);
         let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
+        let default_texture = snuff::gfx::Texture2D::from_data(&display, &vec![255, 255, 255, 255], 1, 1);
+
         Window {
             client_width: width,
             client_height: height,
             events_loop,
             display,
+            default_texture
         }
     }
 
@@ -60,6 +64,6 @@ impl Window {
 
     //---------------------------------------------------------------------------------------------------
     pub fn begin_frame(&mut self) -> CommandBuffer {
-        snuff::gfx::CommandBuffer::new(&self.display)
+        snuff::gfx::CommandBuffer::new(&self.display, &self.default_texture)
     }
 }

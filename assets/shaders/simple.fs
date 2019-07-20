@@ -4,9 +4,9 @@ in vec2 UV;
 
 out vec4 diffuse;
 
-uniform sampler2D tex0;
+uniform sampler2D sampler0;
 
 void main()
 {
-    diffuse = texture(tex0, UV);
+    diffuse = texture(sampler0, UV);
 }

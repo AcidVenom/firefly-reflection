@@ -1,4 +1,6 @@
+#![allow(dead_code)]
 #[macro_use]
+
 extern crate glium;
 extern crate image;
 extern crate time;
@@ -8,7 +10,9 @@ mod snuff;
 struct TestState {
     test_mesh: snuff::gfx::Mesh,
     test_texture: snuff::gfx::Texture2D,
+    test_target_texture: snuff::gfx::Texture2D,
     shader_program: snuff::gfx::ShaderProgram,
+    post_process: snuff::gfx::ShaderProgram,
     angle: f32,
     camera: snuff::core::Camera,
 }
@@ -17,11 +21,26 @@ impl TestState {
     fn new(window: &mut snuff::core::Window) -> TestState {
         TestState {
             test_mesh: snuff::gfx::Mesh::create_quad(window.display(), true),
-            test_texture: snuff::gfx::Texture2D::from_data(window.display(), &vec![0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 255], 2, 2).with_nearest_filter(),
+            test_texture: snuff::gfx::Texture2D::from_data(
+                window.display(),
+                &vec![
+                    0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 255,
+                ],
+                2,
+                2,
+            )
+            .with_nearest_filter(),
+            test_target_texture: snuff::gfx::Texture2D::empty(window.display(), 1280, 720),
             shader_program: snuff::gfx::ShaderProgram::from_source(
                 window.display(),
                 "assets/shaders/simple.vs",
                 "assets/shaders/simple.fs",
+            )
+            .unwrap(),
+            post_process: snuff::gfx::ShaderProgram::from_source(
+                window.display(),
+                "assets/shaders/fullscreen.vs",
+                "assets/shaders/fullscreen.fs",
             )
             .unwrap(),
             angle: 0.0,
@@ -40,7 +59,7 @@ impl snuff::core::GameState for TestState {
 
     fn on_leave(&mut self) {}
 
-    fn update(&mut self, dt: f32) {}
+    fn update(&mut self, _dt: f32) {}
 
     fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32) {
         self.angle += dt * 3.14159;
@@ -50,12 +69,23 @@ impl snuff::core::GameState for TestState {
             .roll(self.angle)
             .set_translation_f(self.angle.sin() * 0.5, 0.0, 1.0);
 
-        command_buffer.draw(
+        let mut target = command_buffer.render_target(&self.test_target_texture);
+
+        command_buffer.clear(&mut target, 0.1, 0.1, 0.1, 1.0);
+
+        command_buffer.draw_into_target(
+            &mut target,
             &mut self.camera,
             &self.test_mesh,
             &mut transform,
             &self.shader_program,
-            &mut vec![&self.test_texture]
+            &mut vec![&self.test_texture],
+        );
+
+        command_buffer.fullscreen_pass(
+            &mut self.camera,
+            &self.post_process,
+            &mut vec![&self.test_target_texture],
         );
     }
 }

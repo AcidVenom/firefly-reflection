@@ -8,7 +8,8 @@ pub struct Window {
     client_height: u16,
     events_loop: glium::glutin::EventsLoop,
     display: glium::Display,
-    default_texture : snuff::gfx::Texture2D
+    default_texture: snuff::gfx::Texture2D,
+    fullscreen_quad: snuff::gfx::Mesh,
 }
 
 impl Window {
@@ -22,14 +23,17 @@ impl Window {
         let cb = glutin::ContextBuilder::new().with_vsync(vsync);
         let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
-        let default_texture = snuff::gfx::Texture2D::from_data(&display, &vec![255, 255, 255, 255], 1, 1);
+        let default_texture =
+            snuff::gfx::Texture2D::from_data(&display, &vec![255, 255, 255, 255], 1, 1);
+        let fullscreen_quad = snuff::gfx::Mesh::create_quad(&display, false);
 
         Window {
             client_width: width,
             client_height: height,
             events_loop,
             display,
-            default_texture
+            default_texture,
+            fullscreen_quad,
         }
     }
 
@@ -63,7 +67,12 @@ impl Window {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn begin_frame(&mut self) -> CommandBuffer {
-        snuff::gfx::CommandBuffer::new(&self.display, &self.default_texture)
+    pub fn begin_frame(&mut self, time: f32) -> CommandBuffer {
+        snuff::gfx::CommandBuffer::new(
+            &self.display,
+            &self.default_texture,
+            &self.fullscreen_quad,
+            time,
+        )
     }
 }

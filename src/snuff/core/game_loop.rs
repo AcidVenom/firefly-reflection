@@ -53,8 +53,8 @@ impl GameLoop {
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn draw(&mut self, dt: f32) {
-        let mut target = self.window.begin_frame();
+    fn draw(&mut self, time: f32, dt: f32) {
+        let mut target = self.window.begin_frame(time);
 
         self.game_state_manager.draw(&mut target, dt);
 
@@ -62,10 +62,10 @@ impl GameLoop {
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn tick(&mut self, dt: f32) {
+    fn tick(&mut self, time: f32, dt: f32) {
         self.game_state_manager.update(dt);
 
-        self.draw(dt);
+        self.draw(time, dt);
 
         self.frame_count += 1;
     }
@@ -74,14 +74,17 @@ impl GameLoop {
     pub fn exec(&mut self) {
         let mut old_time = time::precise_time_ns();
         let mut dt = 0.0;
+        let mut time = 0.0;
 
         while self.window.process_events() {
-            self.tick(dt);
+            self.tick(time, dt);
 
             let deltas = calculate_delta_time(old_time);
 
             dt = deltas.new_dt;
             old_time = deltas.new_time;
+
+            time += dt;
         }
     }
 

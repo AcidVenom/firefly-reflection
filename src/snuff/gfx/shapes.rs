@@ -1,7 +1,7 @@
 #[derive(Copy, Clone)]
 pub struct Vertex2D {
     pub position: [f32; 2],
-    pub uv : [f32; 2]
+    pub uv: [f32; 2],
 }
 
 implement_vertex!(Vertex2D, position, uv);
@@ -31,19 +31,19 @@ impl Mesh {
         let vertices = vec![
             Vertex2D {
                 position: [-size, -size],
-                uv: [0.0, 0.0]
+                uv: [0.0, 0.0],
             },
             Vertex2D {
                 position: [size, -size],
-                uv: [1.0, 0.0]
+                uv: [1.0, 0.0],
             },
             Vertex2D {
                 position: [-size, size],
-                uv: [0.0, 1.0]
+                uv: [0.0, 1.0],
             },
             Vertex2D {
                 position: [size, size],
-                uv: [1.0, 1.0]
+                uv: [1.0, 1.0],
             },
         ];
 

@@ -69,7 +69,7 @@ impl snuff::core::GameState for TestState {
             .roll(self.angle)
             .set_translation_f(self.angle.sin() * 0.5, 0.0, 1.0);
 
-        let mut target = command_buffer.render_target(&self.test_target_texture);
+        let mut target = command_buffer.render_target(vec![&self.test_target_texture]);
 
         command_buffer.clear(&mut target, 0.1, 0.1, 0.1, 1.0);
 

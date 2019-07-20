@@ -12,8 +12,8 @@ pub struct CommandBuffer<'a> {
 }
 
 pub struct RenderTarget<'a> {
-    framebuffer: glium::framebuffer::SimpleFrameBuffer<'a>,
-    texture: &'a snuff::gfx::Texture2D,
+    framebuffer: glium::framebuffer::MultiOutputFrameBuffer<'a>,
+    textures: Vec<&'a snuff::gfx::Texture2D>,
 }
 
 impl<'a> CommandBuffer<'a> {
@@ -58,14 +58,26 @@ impl<'a> CommandBuffer<'a> {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn render_target(&self, texture: &'a snuff::gfx::Texture2D) -> RenderTarget {
+    pub fn render_target<'b>(&self, textures: Vec<&'a snuff::gfx::Texture2D>) -> RenderTarget {
+        assert!(textures.len() <= 4, "[CommandBuffer] Cannot create a render target with more than 4 output values");
+
+        let mut outputs : Vec<(&'a str, &glium::texture::Texture2d)> = Vec::new();
+
+        let names = vec!["output0", "output1", "output2", "output3"];
+
+        let mut output_count = 0;
+        for it in textures.iter() {
+            outputs.push((names[output_count], it.texture()));
+            output_count += 1;
+        }
+        
         RenderTarget {
-            framebuffer: glium::framebuffer::SimpleFrameBuffer::new(
+            framebuffer: glium::framebuffer::MultiOutputFrameBuffer::new(
                 self.display,
-                texture.texture(),
+                outputs.into_iter(),
             )
             .unwrap(),
-            texture,
+            textures,
         }
     }
 

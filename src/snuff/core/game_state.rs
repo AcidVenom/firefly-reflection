@@ -4,7 +4,7 @@ use std::collections::HashMap;
 pub trait GameState {
     fn on_enter(&mut self);
     fn on_leave(&mut self);
-    fn update(&mut self, dt: f32);
+    fn update(&mut self, dt: f32, window: &snuff::core::Window);
     fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32);
 }
 
@@ -51,9 +51,9 @@ impl GameStateManager {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn update(&mut self, dt: f32) {
+    pub fn update(&mut self, dt: f32, window: &snuff::core::Window) {
         if let Some(s) = self.get_current_state() {
-            s.update(dt);
+            s.update(dt, window);
         }
     }
 

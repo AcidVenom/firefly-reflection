@@ -59,10 +59,14 @@ impl snuff::core::GameState for TestState {
 
     fn on_leave(&mut self) {}
 
-    fn update(&mut self, _dt: f32) {}
+    fn update(&mut self, _dt: f32, window: &snuff::core::Window) {
+        if window.is_key_pressed(glium::glutin::VirtualKeyCode::A) {
+            println!("Whoop, pressed 'A' this frame");
+        }
+    }
 
     fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32) {
-        self.angle += dt * 3.14159;
+        self.angle += dt * std::f32::consts::PI;
 
         let mut transform = snuff::core::Transform::new();
         transform
@@ -79,19 +83,19 @@ impl snuff::core::GameState for TestState {
             &self.test_mesh,
             &mut transform,
             &self.shader_program,
-            &mut vec![&self.test_texture],
+            &vec![&self.test_texture],
         );
 
         command_buffer.fullscreen_pass(
             &mut self.camera,
             &self.post_process,
-            &mut vec![&self.test_target_texture],
+            &vec![&self.test_target_texture],
         );
     }
 }
 
 fn main() {
-    let mut game_loop = snuff::core::GameLoop::new(1280, 720, "Firefly - Reflection", true);
+    let mut game_loop = snuff::core::GameLoop::new(1280, 720, "Firefly - Reflection", false);
 
     let window = game_loop.window();
     let test_state = Box::new(TestState::new(window));

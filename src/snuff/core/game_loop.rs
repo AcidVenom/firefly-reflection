@@ -63,7 +63,7 @@ impl GameLoop {
 
     //---------------------------------------------------------------------------------------------------
     fn tick(&mut self, time: f32, dt: f32) {
-        self.game_state_manager.update(dt);
+        self.game_state_manager.update(dt, &self.window);
 
         self.draw(time, dt);
 

@@ -15,6 +15,9 @@ struct TestState {
     post_process: snuff::gfx::ShaderProgram,
     angle: f32,
     camera: snuff::core::Camera,
+    dts: [f32; 100],
+    dt_count: u32,
+    accumulated_counts: u32
 }
 
 impl TestState {
@@ -45,6 +48,9 @@ impl TestState {
             .unwrap(),
             angle: 0.0,
             camera: snuff::core::Camera::new(),
+            dts: [0.0; 100],
+            dt_count: 0,
+            accumulated_counts: 0
         }
     }
 }
@@ -59,10 +65,27 @@ impl snuff::core::GameState for TestState {
 
     fn on_leave(&mut self) {}
 
-    fn update(&mut self, _dt: f32, window: &snuff::core::Window) {
-        if window.is_key_pressed(glium::glutin::VirtualKeyCode::A) {
-            println!("Whoop, pressed 'A' this frame");
+    fn update(&mut self, dt: f32, window: &snuff::core::Window) {
+        self.dts[self.dt_count as usize] = dt;
+
+        if window.is_key_down(glium::glutin::VirtualKeyCode::F) {
+
+            let mut accumulated = 0.0;
+            let count = self.accumulated_counts + 1;
+            for i in 0..count {
+                accumulated += self.dts[i as usize];
+            }
+            accumulated /= count as f32;
+            let fps = 1.0 / accumulated;
+
+            if self.dt_count % 99 == 0
+            {
+                println!("FPS: {}", fps as u32);
+            }
         }
+
+        self.dt_count = if self.dt_count + 1 >= 100 { 0 } else { self.dt_count + 1 };
+        self.accumulated_counts = if self.accumulated_counts < self.dt_count { self.dt_count } else { self.accumulated_counts };
     }
 
     fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32) {
@@ -95,7 +118,7 @@ impl snuff::core::GameState for TestState {
 }
 
 fn main() {
-    let mut game_loop = snuff::core::GameLoop::new(1280, 720, "Firefly - Reflection", false);
+    let mut game_loop = snuff::core::GameLoop::new(1280, 720, "Firefly - Reflection", true);
 
     let window = game_loop.window();
     let test_state = Box::new(TestState::new(window));

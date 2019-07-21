@@ -11,6 +11,23 @@ pub enum KeyState {
     Up,
 }
 
+#[derive(PartialEq, Clone, Copy)]
+pub enum MouseState {
+    Pressed,
+    Released,
+    Down,
+    Up,
+    Moved,
+    Scroll
+}
+
+pub struct MouseEvent {
+    button: glutin::MouseButton,
+    state: MouseState,
+    screen_pos: nalgebra_glm::Vec2,
+    scroll: f64
+}
+
 pub struct Window {
     client_width: u16,
     client_height: u16,
@@ -19,6 +36,10 @@ pub struct Window {
     default_texture: snuff::gfx::Texture2D,
     fullscreen_quad: snuff::gfx::Mesh,
     key_states: std::collections::HashMap<glutin::VirtualKeyCode, KeyState>,
+    mouse_states: std::collections::HashMap<glutin::MouseButton, MouseState>,
+    old_mouse_pos: nalgebra_glm::Vec2,
+    current_mouse_pos: nalgebra_glm::Vec2,
+    mouse_scroll: f64
 }
 
 impl Window {
@@ -44,6 +65,10 @@ impl Window {
             default_texture,
             fullscreen_quad,
             key_states: std::collections::HashMap::new(),
+            mouse_states: std::collections::HashMap::new(),
+            old_mouse_pos: nalgebra_glm::vec2(0.0, 0.0),
+            current_mouse_pos: nalgebra_glm::vec2(0.0, 0.0),
+            mouse_scroll: 0.0
         }
     }
 
@@ -99,7 +124,55 @@ impl Window {
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn reset_key_states(&mut self) {
+    fn handle_mouse_events(&mut self, events: Vec<MouseEvent>) {
+        for evt in events.iter() {
+            match evt.state {
+                MouseState::Moved => {
+                    self.old_mouse_pos = self.current_mouse_pos;
+                    self.current_mouse_pos = evt.screen_pos;
+                },
+                MouseState::Scroll => {
+                    self.mouse_scroll = evt.scroll;
+                },
+                MouseState::Pressed | MouseState::Released => {
+                    let button = &evt.button;
+                    let current_pressed = evt.state == MouseState::Pressed;
+                    let mut new_state = MouseState::Down;
+
+                    match self.mouse_states.get(button) {
+                        Some(state) => {
+                            let prev_state = *state;
+
+                            if (prev_state == MouseState::Up || prev_state == MouseState::Released)
+                                && current_pressed
+                            {
+                                new_state = MouseState::Pressed;
+                            }
+
+                            if (prev_state == MouseState::Down || prev_state == MouseState::Pressed)
+                                && !current_pressed
+                            {
+                                new_state = MouseState::Released;
+                            }
+                        }
+                        None => {
+                            new_state = if current_pressed {
+                                MouseState::Pressed
+                            } else {
+                                MouseState::Released
+                            };
+                        }
+                    }
+
+                    self.mouse_states.insert(*button, new_state);
+                },
+                _ => {}
+            }
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    fn reset_input_states(&mut self) {
         for it in self.key_states.iter_mut() {
             let old_state = *it.1;
             *it.1 = match old_state {
@@ -108,28 +181,78 @@ impl Window {
                 _ => old_state,
             };
         }
+
+        for it in self.mouse_states.iter_mut() {
+            let old_state = *it.1;
+            *it.1 = match old_state {
+                MouseState::Pressed => MouseState::Down,
+                MouseState::Released => MouseState::Up,
+                _ => old_state,
+            };
+        }
+
+        self.mouse_scroll = 0.0;
+        self.old_mouse_pos = self.current_mouse_pos;
     }
 
     //---------------------------------------------------------------------------------------------------
     pub fn process_events(&mut self) -> bool {
         let mut closed = false;
         let mut key_events: Vec<glium::glutin::KeyboardInput> = Vec::new();
+        let mut mouse_events: Vec<MouseEvent> = Vec::new();
+        let old_mouse_pos = self.old_mouse_pos;
 
-        self.reset_key_states();
+        self.reset_input_states();
 
         self.events_loop.poll_events(|evt| match evt {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => closed = true,
+                //---------------------------------------------------------------------------------------------------
                 glutin::WindowEvent::KeyboardInput {
                     input,
                     ..
                 } => key_events.push(input),
+                //---------------------------------------------------------------------------------------------------
+                glutin::WindowEvent::MouseInput {
+                    state,
+                    button,
+                    ..
+                } => mouse_events.push(MouseEvent{ 
+                    button, 
+                    state: if state == glutin::ElementState::Pressed { MouseState::Pressed } else { MouseState::Released }, 
+                    screen_pos: old_mouse_pos, 
+                    scroll: 0.0 
+                }),
+                //---------------------------------------------------------------------------------------------------
+                glutin::WindowEvent::MouseWheel {
+                    delta,
+                    ..
+                } => mouse_events.push(MouseEvent{ 
+                    button: glutin::MouseButton::Left, 
+                    state: MouseState::Scroll, 
+                    screen_pos: old_mouse_pos, 
+                    scroll: match delta { 
+                        glutin::MouseScrollDelta::PixelDelta(d) => { d.x },
+                        _ => 0.0
+                }}),
+                //---------------------------------------------------------------------------------------------------
+                glutin::WindowEvent::CursorMoved {
+                    position,
+                    ..
+                } => mouse_events.push(MouseEvent{
+                    button: glutin::MouseButton::Left,
+                    state: MouseState::Moved,
+                    screen_pos: nalgebra_glm::vec2(position.x as f32, position.y as f32),
+                    scroll: 0.0
+                }),
+                //---------------------------------------------------------------------------------------------------
                 _ => (),
             },
             _ => (),
         });
 
         self.handle_key_events(key_events);
+        self.handle_mouse_events(mouse_events);
 
         !closed
     }
@@ -156,6 +279,62 @@ impl Window {
             Some(state) => *state == KeyState::Down || *state == KeyState::Pressed,
             None => false,
         }
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn is_mouse_button_pressed(&self, button: glutin::MouseButton) -> bool {
+        match self.mouse_states.get(&button) {
+            Some(state) => *state == MouseState::Pressed,
+            None => false,
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn is_mouse_button_released(&self, button: glutin::MouseButton) -> bool {
+        match self.mouse_states.get(&button) {
+            Some(state) => *state == MouseState::Released,
+            None => false,
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn is_mouse_button_down(&self, button: glutin::MouseButton) -> bool {
+        match self.mouse_states.get(&button) {
+            Some(state) => *state == MouseState::Down || *state == MouseState::Pressed,
+            None => false,
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    fn absolute_to_clip_space(&self, p : nalgebra_glm::Vec2) -> nalgebra_glm::Vec2 {
+        let mut clip_space = nalgebra_glm::vec2(p.x / self.client_width as f32, 1.0 - (p.y / self.client_height as f32));
+        clip_space *= 2.0;
+        clip_space - nalgebra_glm::vec2(1.0, 1.0)
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn mouse_position(&self) -> nalgebra_glm::Vec2 {
+        self.current_mouse_pos
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn mouse_relative_position(&self) -> nalgebra_glm::Vec2 {
+        self.absolute_to_clip_space(self.current_mouse_pos)
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn mouse_delta(&self) -> nalgebra_glm::Vec2 {
+        self.old_mouse_pos - self.current_mouse_pos
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn mouse_relative_delta(&self) -> nalgebra_glm::Vec2 {
+        self.absolute_to_clip_space(self.mouse_delta())
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn mouse_scroll(&self) -> f64 {
+        self.mouse_scroll
     }
 
     //---------------------------------------------------------------------------------------------------

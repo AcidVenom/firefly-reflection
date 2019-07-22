@@ -84,8 +84,7 @@ impl snuff::core::GameState for TestState {
             }
             
             let current_mouse = window.mouse_relative_position();
-            let mut delta = self.mouse_down_pos - current_mouse;
-            delta.y = -delta.y;
+            let delta = self.mouse_down_pos - current_mouse;
 
             self.camera.transform().set_translation_2d(&(self.camera_mouse_down_pos + delta * 5.0));
         } else {

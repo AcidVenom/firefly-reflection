@@ -25,7 +25,7 @@ pub struct MouseEvent {
     button: glutin::MouseButton,
     state: MouseState,
     screen_pos: nalgebra_glm::Vec2,
-    scroll: f64
+    scroll: f32
 }
 
 pub struct Window {
@@ -39,7 +39,7 @@ pub struct Window {
     mouse_states: std::collections::HashMap<glutin::MouseButton, MouseState>,
     old_mouse_pos: nalgebra_glm::Vec2,
     current_mouse_pos: nalgebra_glm::Vec2,
-    mouse_scroll: f64
+    mouse_scroll: f32
 }
 
 impl Window {
@@ -232,8 +232,8 @@ impl Window {
                     state: MouseState::Scroll, 
                     screen_pos: old_mouse_pos, 
                     scroll: match delta { 
-                        glutin::MouseScrollDelta::PixelDelta(d) => { d.x },
-                        _ => 0.0
+                        glutin::MouseScrollDelta::PixelDelta(d) => { d.y as f32 },
+                        glutin::MouseScrollDelta::LineDelta(_, dy) => { dy }
                 }}),
                 //---------------------------------------------------------------------------------------------------
                 glutin::WindowEvent::CursorMoved {
@@ -333,7 +333,7 @@ impl Window {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn mouse_scroll(&self) -> f64 {
+    pub fn mouse_scroll(&self) -> f32 {
         self.mouse_scroll
     }
 

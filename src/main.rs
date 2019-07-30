@@ -4,6 +4,7 @@
 extern crate glium;
 extern crate image;
 extern crate time;
+extern crate notify;
 
 mod snuff;
 
@@ -40,14 +41,14 @@ impl TestState {
             test_target_texture: snuff::gfx::Texture2D::empty(window.display(), 1280, 720),
             shader_program: snuff::gfx::ShaderProgram::from_source(
                 window.display(),
-                "assets/shaders/simple.vs",
-                "assets/shaders/simple.fs",
+                String::from("assets/shaders/simple.vs"),
+                String::from("assets/shaders/simple.fs"),
             )
             .unwrap(),
             post_process: snuff::gfx::ShaderProgram::from_source(
                 window.display(),
-                "assets/shaders/fullscreen.vs",
-                "assets/shaders/fullscreen.fs",
+                String::from("assets/shaders/fullscreen.vs"),
+                String::from("assets/shaders/fullscreen.fs"),
             )
             .unwrap(),
             angle: 0.0,
@@ -130,13 +131,13 @@ impl snuff::core::GameState for TestState {
             &mut self.camera,
             &self.test_mesh,
             &mut transform,
-            &self.shader_program,
+            &mut self.shader_program,
             &vec![&self.test_texture],
         );
 
         command_buffer.fullscreen_pass(
             &mut self.camera,
-            &self.post_process,
+            &mut self.post_process,
             &vec![&self.test_target_texture],
         );
     }

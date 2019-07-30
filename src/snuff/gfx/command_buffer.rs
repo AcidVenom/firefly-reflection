@@ -93,7 +93,7 @@ impl<'a> CommandBuffer<'a> {
         camera: &mut snuff::core::Camera,
         mesh: &snuff::gfx::Mesh,
         transform: &mut snuff::core::Transform,
-        shader: &snuff::gfx::ShaderProgram,
+        shader: &mut snuff::gfx::ShaderProgram,
         textures: &Vec<&snuff::gfx::Texture2D>,
     ) {
         let uniforms = uniform! {
@@ -115,7 +115,7 @@ impl<'a> CommandBuffer<'a> {
             .draw(
                 mesh.vertex_buffer(),
                 mesh.index_buffer(),
-                shader.program(),
+                shader.program(self.display),
                 &uniforms,
                 &Default::default(),
             )
@@ -129,7 +129,7 @@ impl<'a> CommandBuffer<'a> {
         camera: &mut snuff::core::Camera,
         mesh: &snuff::gfx::Mesh,
         transform: &mut snuff::core::Transform,
-        shader: &snuff::gfx::ShaderProgram,
+        shader: &mut snuff::gfx::ShaderProgram,
         textures: &Vec<&snuff::gfx::Texture2D>,
     ) {
         let uniforms = uniform! {
@@ -152,7 +152,7 @@ impl<'a> CommandBuffer<'a> {
             .draw(
                 mesh.vertex_buffer(),
                 mesh.index_buffer(),
-                shader.program(),
+                shader.program(self.display),
                 &uniforms,
                 &Default::default(),
             )
@@ -163,7 +163,7 @@ impl<'a> CommandBuffer<'a> {
     pub fn fullscreen_pass(
         &mut self,
         camera: &mut snuff::core::Camera,
-        shader: &snuff::gfx::ShaderProgram,
+        shader: &mut snuff::gfx::ShaderProgram,
         textures: &Vec<&snuff::gfx::Texture2D>,
     ) {
         let uniforms = uniform! {
@@ -184,7 +184,7 @@ impl<'a> CommandBuffer<'a> {
             .draw(
                 self.fullscreen_quad.vertex_buffer(),
                 self.fullscreen_quad.index_buffer(),
-                shader.program(),
+                shader.program(self.display),
                 &uniforms,
                 &Default::default(),
             )

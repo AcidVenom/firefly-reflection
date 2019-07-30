@@ -54,18 +54,33 @@ impl GameLoop {
 
     //---------------------------------------------------------------------------------------------------
     fn draw(&mut self, time: f32, dt: f32) {
-        let mut target = self.window.begin_frame(time);
-
-        self.game_state_manager.draw(&mut target, dt);
-
-        target.end();
+        
     }
 
     //---------------------------------------------------------------------------------------------------
     fn tick(&mut self, time: f32, dt: f32) {
-        self.game_state_manager.update(dt, &self.window);
+        let game_state_manager = &mut self.game_state_manager;
+        let current_state = game_state_manager.get_current_state();
 
-        self.draw(time, dt);
+        let next_state = match current_state {
+            Some(state) => { state.update(dt, &self.window) },
+            _ => None
+        };
+
+        let mut target = self.window.begin_frame(time);
+        let current_state = game_state_manager.get_current_state();
+
+        match current_state {
+            Some(state) => { state.draw(&mut target, dt); },
+            None => {}
+        };
+
+        target.end();
+
+        match next_state {
+            Some(state_name) => game_state_manager.switch(&state_name[..]),
+            _ => {}
+        };
 
         self.frame_count += 1;
     }

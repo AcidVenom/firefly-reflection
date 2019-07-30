@@ -4,7 +4,7 @@ use std::collections::HashMap;
 pub trait GameState {
     fn on_enter(&mut self);
     fn on_leave(&mut self);
-    fn update(&mut self, dt: f32, window: &snuff::core::Window);
+    fn update(&mut self, dt: f32, window: &snuff::core::Window) -> Option<String>;
     fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32);
 }
 
@@ -42,6 +42,7 @@ impl GameStateManager {
             Some(s) => {
                 s.on_enter();
                 self.current_state = String::from(name);
+                println!("[GameStateManager] Switched to state '{}'", name);
             }
 
             None => {
@@ -51,21 +52,7 @@ impl GameStateManager {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn update(&mut self, dt: f32, window: &snuff::core::Window) {
-        if let Some(s) = self.get_current_state() {
-            s.update(dt, window);
-        }
-    }
-
-    //---------------------------------------------------------------------------------------------------
-    pub fn draw(&mut self, command_buffer: &mut snuff::gfx::CommandBuffer, dt: f32) {
-        if let Some(s) = self.get_current_state() {
-            s.draw(command_buffer, dt);
-        }
-    }
-
-    //---------------------------------------------------------------------------------------------------
-    fn get_current_state(&mut self) -> Option<&mut GameState> {
+    pub fn get_current_state(&mut self) -> Option<&mut GameState> {
         if !self.current_state.is_empty() {
             match self.states.get_mut(&self.current_state) {
                 Some(s) => Some(s.as_mut()),

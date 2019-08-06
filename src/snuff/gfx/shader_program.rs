@@ -76,7 +76,7 @@ impl ShaderProgram {
         let new_shader = ShaderProgram::from_source(display, self.vs_file_path.to_string(), self.fs_file_path.to_string());
 
         match new_shader {
-            Ok(shader_program) => { self.program = shader_program.program; },
+            Ok(shader_program) => { self.program = shader_program.program; println!("[ShaderProgram] Reloaded ({}, {})", self.vs_file_path, self.fs_file_path); },
             Err(err) => { println!("[ShaderProgram] Could not reload shader ('{}', '{}'): {}", self.vs_file_path, self.fs_file_path, err); }
         }
     }

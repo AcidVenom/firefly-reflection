@@ -6,7 +6,7 @@ pub struct MainState {
 }
 
 impl MainState {
-    pub fn new(window : &core::Window) -> MainState {
+    pub fn new(window: &mut core::Window) -> MainState {
         MainState{}
     }
 }

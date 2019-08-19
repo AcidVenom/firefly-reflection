@@ -50,7 +50,11 @@ impl Window {
             .with_dimensions((u32::from(width), u32::from(height)).into())
             .with_title(title);
 
-        let cb = glutin::ContextBuilder::new().with_vsync(vsync);
+        let cb = glutin::ContextBuilder::new()
+            .with_srgb(true)
+            .with_pixel_format(24, 8)
+            .with_vsync(vsync);
+            
         let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
         let default_texture =
@@ -90,11 +94,15 @@ impl Window {
     //---------------------------------------------------------------------------------------------------
     fn handle_key_events(&mut self, events: Vec<glium::glutin::KeyboardInput>) {
         for evt in events.iter() {
-            let keycode = &evt.virtual_keycode.unwrap();
+            let keycode = match evt.virtual_keycode {
+                Some(kc) => kc,
+                None => glutin::VirtualKeyCode::OEM102
+            };
+
             let current_pressed = evt.state == glutin::ElementState::Pressed;
             let mut new_state = KeyState::Down;
 
-            match self.key_states.get(keycode) {
+            match self.key_states.get(&keycode) {
                 Some(state) => {
                     let prev_state = *state;
 
@@ -119,7 +127,7 @@ impl Window {
                 }
             }
 
-            self.key_states.insert(*keycode, new_state);
+            self.key_states.insert(keycode, new_state);
         }
     }
 

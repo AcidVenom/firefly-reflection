@@ -19,7 +19,16 @@ impl ShaderProgram {
     ) -> Result<ShaderProgram, glium::ProgramCreationError> {
         let (sender, receiver) = channel();
 
-        match glium::Program::from_source(display, vs_raw, fs_raw, None) {
+        match glium::Program::new(display, glium::program::ProgramCreationInput::SourceCode {
+            vertex_shader: vs_raw,
+            fragment_shader: fs_raw,
+            geometry_shader: None,
+            tessellation_control_shader: None,
+            tessellation_evaluation_shader: None,
+            transform_feedback_varyings: None,
+            outputs_srgb: true,
+            uses_point_size: false,
+        }) {
             Ok(program) => Ok(ShaderProgram {
                 program,
                 watcher: Watcher::new(sender, Duration::from_millis(150)).unwrap(),

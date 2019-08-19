@@ -4,6 +4,7 @@ pub struct Transform {
     translation: nalgebra_glm::Vec3,
     anchor: nalgebra_glm::Vec3,
     scale: nalgebra_glm::Vec3,
+    size: nalgebra_glm::Vec3,
     rotation: nalgebra_glm::Quat,
     local_to_world: nalgebra_glm::Mat4,
     world_to_local: nalgebra_glm::Mat4,
@@ -17,6 +18,7 @@ impl Transform {
             translation: nalgebra_glm::vec3(0.0, 0.0, 0.0),
             anchor: nalgebra_glm::vec3(0.0, 0.0, 0.0),
             scale: nalgebra_glm::vec3(1.0, 1.0, 1.0),
+            size: nalgebra_glm::vec3(1.0, 1.0, 1.0),
             rotation: nalgebra_glm::quat_identity(),
             local_to_world: nalgebra_glm::identity(),
             world_to_local: nalgebra_glm::identity(),
@@ -104,6 +106,29 @@ impl Transform {
     }
 
     //---------------------------------------------------------------------------------------------------
+    pub fn set_size(&mut self, s: &nalgebra_glm::Vec3) -> &mut Transform {
+        self.size = *s;
+        self.mark_dirty();
+
+        self
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn set_size_f(&mut self, x: f32, y: f32, z: f32) -> &mut Transform {
+        self.set_size(&nalgebra_glm::vec3(x, y, z))
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn set_size_2d(&mut self, s: &nalgebra_glm::Vec2) -> &mut Transform {
+        self.set_size(&nalgebra_glm::vec3(s.x, s.y, self.size.z))
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn set_size_2d_f(&mut self, x: f32, y: f32) -> &mut Transform {
+        self.set_size(&nalgebra_glm::vec3(x, y, self.scale.z))
+    }
+
+    //---------------------------------------------------------------------------------------------------
     pub fn set_rotation(&mut self, r: &nalgebra_glm::Quat) -> &mut Transform {
         self.rotation = *r;
         self.mark_dirty();
@@ -183,8 +208,10 @@ impl Transform {
         } else {
             let mut m: nalgebra_glm::Mat4 = nalgebra_glm::identity();
 
+            let upscaled = nalgebra_glm::vec3(self.scale.x * self.size.x, self.scale.y * self.size.y, self.scale.z * self.size.z);
+
             m = nalgebra_glm::translate(&m, &self.translation);
-            m = nalgebra_glm::scale(&m, &self.scale);
+            m = nalgebra_glm::scale(&m, &upscaled);
             m *= nalgebra_glm::quat_to_mat4(&self.rotation);
             m = nalgebra_glm::translate(&m, &self.anchor);
 

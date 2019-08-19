@@ -3,12 +3,21 @@ use crate::snuff;
 use glium;
 use glium::Surface;
 
+pub enum BlendMode {
+    Additive,
+    Alpha,
+    Opaque,
+    None
+}
+
 pub struct CommandBuffer<'a> {
     frame: glium::Frame,
     display: &'a glium::Display,
     default_texture: &'a snuff::gfx::Texture2D,
     fullscreen_quad: &'a snuff::gfx::Mesh,
     time: f32,
+    current_blend_mode: BlendMode,
+    blend_color: nalgebra_glm::Vec4
 }
 
 pub struct RenderTarget<'a> {
@@ -25,7 +34,7 @@ impl<'a> CommandBuffer<'a> {
         time: f32,
     ) -> CommandBuffer<'a> {
         let mut target = display.draw();
-        target.clear_color(0.1, 0.33, 1.0, 1.0);
+        target.clear_color_srgb(0.1, 0.33, 1.0, 1.0);
 
         CommandBuffer {
             frame: target,
@@ -33,6 +42,8 @@ impl<'a> CommandBuffer<'a> {
             default_texture,
             fullscreen_quad,
             time,
+            current_blend_mode: BlendMode::Alpha,
+            blend_color: nalgebra_glm::vec4(1.0, 1.0, 1.0, 1.0)
         }
     }
 
@@ -41,7 +52,7 @@ impl<'a> CommandBuffer<'a> {
         &self,
         index: usize,
         textures: &'a Vec<&snuff::gfx::Texture2D>,
-    ) -> glium::uniforms::Sampler<'a, glium::texture::Texture2d> {
+    ) -> glium::uniforms::Sampler<'a, glium::texture::SrgbTexture2d> {
         let texture_handle = if index >= textures.len() {
             self.default_texture
         } else {
@@ -64,7 +75,7 @@ impl<'a> CommandBuffer<'a> {
             "[CommandBuffer] Cannot create a render target with more than 4 output values"
         );
 
-        let mut outputs: Vec<(&'a str, &glium::texture::Texture2d)> = Vec::new();
+        let mut outputs: Vec<(&'a str, &glium::texture::SrgbTexture2d)> = Vec::new();
 
         let names = vec!["output0", "output1", "output2", "output3"];
 
@@ -84,7 +95,78 @@ impl<'a> CommandBuffer<'a> {
 
     //---------------------------------------------------------------------------------------------------
     pub fn clear(&self, target: &mut RenderTarget, r: f32, g: f32, b: f32, a: f32) {
-        target.framebuffer.clear_color(r, g, b, a);
+        target.framebuffer.clear_color_srgb(r, g, b, a);
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    fn create_draw_params<'b>(blend_mode : &BlendMode) -> glium::DrawParameters<'b> {
+        glium::DrawParameters {
+            blend: match blend_mode {
+                BlendMode::Additive => glium::Blend {
+                    color: glium::BlendingFunction::Addition {
+                        source: glium::LinearBlendingFactor::SourceAlpha,
+                        destination: glium::LinearBlendingFactor::One
+                    },
+                    alpha: glium::BlendingFunction::Addition {
+                        source: glium::LinearBlendingFactor::Zero,
+                        destination: glium::LinearBlendingFactor::One
+                    },
+                    constant_value: (0.0, 0.0, 0.0, 0.0)
+                },
+                
+                BlendMode::Alpha => glium::Blend {
+                    color: glium::BlendingFunction::Addition {
+                        source: glium::LinearBlendingFactor::SourceAlpha,
+                        destination: glium::LinearBlendingFactor::OneMinusSourceAlpha
+                    },
+                    alpha: glium::BlendingFunction::Addition {
+                        source: glium::LinearBlendingFactor::One,
+                        destination: glium::LinearBlendingFactor::Zero
+                    },
+                    constant_value: (0.0, 0.0, 0.0, 0.0)
+                },
+                
+                BlendMode::Opaque => glium::Blend::default(),
+                
+                BlendMode::None => glium::Blend {
+                    color: glium::BlendingFunction::Addition {
+                        source: glium::LinearBlendingFactor::SourceAlpha,
+                        destination: glium::LinearBlendingFactor::Zero
+                    },
+                    alpha: glium::BlendingFunction::Addition {
+                        source: glium::LinearBlendingFactor::One,
+                        destination: glium::LinearBlendingFactor::Zero
+                    },
+                    constant_value: (0.0, 0.0, 0.0, 0.0)
+                }
+            },
+            .. Default::default()
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn alpha_blend(&mut self) {
+        self.current_blend_mode = BlendMode::Alpha;
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn additive_blend(&mut self) {
+        self.current_blend_mode = BlendMode::Additive;
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn opaque_blend(&mut self) {
+        self.current_blend_mode = BlendMode::Opaque;
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn no_blend(&mut self) {
+        self.current_blend_mode = BlendMode::None;
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn set_blend_color(&mut self, r : f32, g : f32, b : f32, a : f32) {
+        self.blend_color = nalgebra_glm::vec4(r, g, b, a);
     }
 
     //---------------------------------------------------------------------------------------------------
@@ -101,6 +183,7 @@ impl<'a> CommandBuffer<'a> {
             model: *transform.local_to_world().as_ref(),
             view: *camera.view().as_ref(),
             projection: *camera.projection().as_ref(),
+            blend: *self.blend_color.as_ref(),
             sampler0: self.create_sampler_uniform(0, textures),
             sampler1: self.create_sampler_uniform(1, textures),
             sampler2: self.create_sampler_uniform(2, textures),
@@ -117,7 +200,7 @@ impl<'a> CommandBuffer<'a> {
                 mesh.index_buffer(),
                 shader.program(self.display),
                 &uniforms,
-                &Default::default(),
+                &CommandBuffer::create_draw_params(&self.current_blend_mode),
             )
             .unwrap();
     }
@@ -137,6 +220,7 @@ impl<'a> CommandBuffer<'a> {
             model: *transform.local_to_world().as_ref(),
             view: *camera.view().as_ref(),
             projection: *camera.projection().as_ref(),
+            blend: *self.blend_color.as_ref(),
             sampler0: self.create_sampler_uniform(0, textures),
             sampler1: self.create_sampler_uniform(1, textures),
             sampler2: self.create_sampler_uniform(2, textures),
@@ -154,7 +238,7 @@ impl<'a> CommandBuffer<'a> {
                 mesh.index_buffer(),
                 shader.program(self.display),
                 &uniforms,
-                &Default::default(),
+                &CommandBuffer::create_draw_params(&self.current_blend_mode),
             )
             .unwrap();
     }
@@ -170,6 +254,7 @@ impl<'a> CommandBuffer<'a> {
             time: self.time,
             view: *camera.view().as_ref(),
             projection: *camera.projection().as_ref(),
+            blend: *self.blend_color.as_ref(),
             sampler0: self.create_sampler_uniform(0, textures),
             sampler1: self.create_sampler_uniform(1, textures),
             sampler2: self.create_sampler_uniform(2, textures),
@@ -186,7 +271,7 @@ impl<'a> CommandBuffer<'a> {
                 self.fullscreen_quad.index_buffer(),
                 shader.program(self.display),
                 &uniforms,
-                &Default::default(),
+                &CommandBuffer::create_draw_params(&self.current_blend_mode),
             )
             .unwrap()
     }

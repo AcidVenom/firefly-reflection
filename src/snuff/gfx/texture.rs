@@ -1,7 +1,7 @@
 use std::io::Read;
 
 pub struct Texture2D {
-    texture: glium::texture::Texture2d,
+    texture: glium::texture::SrgbTexture2d,
     dimensions: nalgebra_glm::U16Vec2,
     min_filter: glium::uniforms::MinifySamplerFilter,
     max_filter: glium::uniforms::MagnifySamplerFilter,
@@ -13,7 +13,7 @@ impl Texture2D {
     //---------------------------------------------------------------------------------------------------
     pub fn empty(display: &glium::Display, width: u16, height: u16) -> Texture2D {
         Texture2D {
-            texture: glium::texture::Texture2d::empty(display, width as u32, height as u32)
+            texture: glium::texture::SrgbTexture2d::empty(display, width as u32, height as u32)
                 .unwrap(),
             dimensions: nalgebra_glm::vec2(width, height),
             min_filter: glium::uniforms::MinifySamplerFilter::Linear,
@@ -33,7 +33,7 @@ impl Texture2D {
             (width as u32, height as u32).into(),
         );
         Texture2D {
-            texture: glium::texture::Texture2d::new(display, image).unwrap(),
+            texture: glium::texture::SrgbTexture2d::new(display, image).unwrap(),
             dimensions: nalgebra_glm::vec2(width, height),
             min_filter: glium::uniforms::MinifySamplerFilter::Linear,
             max_filter: glium::uniforms::MagnifySamplerFilter::Linear,
@@ -61,7 +61,7 @@ impl Texture2D {
     }
 
     //---------------------------------------------------------------------------------------------------
-    pub fn texture(&self) -> &glium::texture::Texture2d {
+    pub fn texture(&self) -> &glium::texture::SrgbTexture2d {
         &self.texture
     }
 
@@ -86,5 +86,10 @@ impl Texture2D {
     //---------------------------------------------------------------------------------------------------
     pub fn dimensions(&self) -> nalgebra_glm::U16Vec2 {
         self.dimensions
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    pub fn dimensions_f(&self) -> nalgebra_glm::Vec2 {
+        nalgebra_glm::vec2(self.dimensions.x as f32, self.dimensions.y as f32)
     }
 }

@@ -8,6 +8,6 @@ uniform sampler2D sampler0;
 
 void main()
 {
-    color = texture(sampler0, UV) * blend;
-    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+    vec2 uv = max(vec2(0.01), min(UV, vec2(0.99)));
+    color = texture(sampler0, uv) * blend;
 }

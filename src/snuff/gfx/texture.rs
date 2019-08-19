@@ -41,6 +41,16 @@ impl Texture2D {
     }
 
     //---------------------------------------------------------------------------------------------------
+    pub fn linear_to_srgb(channel : f32) -> f32 {
+        if channel <= 0.0031308 {
+            12.92 * channel
+        }
+        else {
+            (1.0 + 0.055) * f32::powf(channel, 1.0 / 2.4) - 0.055
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------
     pub fn from_image<'a>(display: &glium::Display, path: &'a str) -> Texture2D {
         let mut fin = std::fs::File::open(path)
             .expect(&format!("[Texture2D] Could not open file '{}'", path)[..]);
@@ -49,8 +59,20 @@ impl Texture2D {
         fin.read_to_end(&mut data)
             .expect(&format!("[Texture2D] Could not read image data from file '{}'", path)[..]);
 
-        let image_data = image::load_from_memory(&data).unwrap().to_rgba();
+        let mut image_data = image::load_from_memory(&data).unwrap().to_rgba();
         let dimensions = image_data.dimensions();
+
+        for (pixel, it) in image_data.iter_mut().enumerate() {
+            if pixel % 4 == 3 {
+                continue;
+            }
+
+            let mut srgb = *it as f32;
+            srgb = srgb / 255.0;
+            srgb = f32::floor(Texture2D::linear_to_srgb(srgb) * 255.0 + 0.5);
+
+            *it = srgb as u8;
+        }
 
         Texture2D::from_data(
             display,

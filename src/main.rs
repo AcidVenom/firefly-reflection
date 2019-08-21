@@ -5,6 +5,7 @@ extern crate glium;
 extern crate image;
 extern crate time;
 extern crate notify;
+extern crate rodio;
 
 mod snuff;
 mod firefly;

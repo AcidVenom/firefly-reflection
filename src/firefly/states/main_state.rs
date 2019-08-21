@@ -17,6 +17,11 @@ impl core::GameState for MainState {
     }
 
     fn update(&mut self, dt: f32, window: &core::Window) -> Option<String> {
+
+        if window.is_key_released(glium::glutin::VirtualKeyCode::R) {
+            return Some(String::from("MenuState"));
+        }
+        
         None
     }
 

@@ -9,3 +9,8 @@ pub struct RenderData<'a> {
 pub trait GameObject {
     fn render_data(&mut self) -> RenderData;
 }
+
+pub struct BackgroundObject {
+    pub background_index: usize,
+    pub transform: core::Transform
+}

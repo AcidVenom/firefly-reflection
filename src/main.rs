@@ -6,6 +6,7 @@ extern crate image;
 extern crate time;
 extern crate notify;
 extern crate rodio;
+extern crate rand;
 
 mod snuff;
 mod firefly;

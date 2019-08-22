@@ -2,6 +2,7 @@ use crate::snuff::core;
 use crate::snuff::gfx;
 use crate::firefly::objects;
 use crate::firefly::objects::GameObject;
+use rand::prelude::*;
 
 #[derive(PartialEq)]
 enum FadeMode {
@@ -18,11 +19,16 @@ pub struct MainState {
     background_shader: gfx::ShaderProgram,
     fullscreen_shader: gfx::ShaderProgram,
     shader: gfx::ShaderProgram,
+    tree_shader: gfx::ShaderProgram,
     fade: f32,
     fade_timer: f32,
     fade_from: f32,
     fade_mode: FadeMode,
-    player: objects::Player
+    player: objects::Player,
+    backgrounds: Vec<objects::BackgroundObject>,
+    background_textures: Vec<gfx::Texture2D>,
+    trees: Vec<objects::BackgroundObject>,
+    tree_textures: Vec<gfx::Texture2D>
 }
 
 impl MainState {
@@ -37,12 +43,72 @@ impl MainState {
             background_shader: gfx::ShaderProgram::from_source(display, "assets/shaders/fullscreen.vs".to_string(), "assets/shaders/background.fs".to_string()).unwrap(),
             fullscreen_shader: gfx::ShaderProgram::from_source(display, "assets/shaders/fullscreen.vs".to_string(), "assets/shaders/fullscreen.fs".to_string()).unwrap(),
             shader: gfx::ShaderProgram::from_source(display, "assets/shaders/simple.vs".to_string(), "assets/shaders/simple.fs".to_string()).unwrap(),
+            tree_shader: gfx::ShaderProgram::from_source(display, "assets/shaders/tree.vs".to_string(), "assets/shaders/simple.fs".to_string()).unwrap(),
             fade: 1.0,
             fade_timer: 0.0,
             fade_from: 1.0,
             fade_mode: FadeMode::In,
-            player: objects::Player::new(display)
+            player: objects::Player::new(display),
+            backgrounds: Vec::new(),
+            background_textures: Vec::new(),
+            trees: Vec::new(),
+            tree_textures: Vec::new()
         };
+
+        let num_backgrounds = 1;
+        let background_offset = main_state.player.border().y + 160.0;
+
+        for i in 0..num_backgrounds {
+            let mut background = objects::BackgroundObject {
+                background_index: i,
+                transform: core::Transform::new()
+            };
+
+            background.transform
+                .set_size_2d_f(1280.0, 720.0)
+                .set_translation_2d_f((i as f32) * 1280.0, background_offset);
+
+            main_state.backgrounds.push(background);
+            main_state.background_textures.push(
+                gfx::Texture2D::from_image(display, &format!("assets/textures/backgrounds/{}.png", i)[..]).with_nearest_filter());
+        }
+
+        let num_tree_textures = 4;
+        for i in 0..num_tree_textures {
+            main_state.tree_textures.push(
+                gfx::Texture2D::from_image(display, &format!("assets/textures/trees/{}.png", i)[..]).with_nearest_filter());
+        }
+
+        let num_trees = 50;
+        let mut tree_offset = 300.0;
+        let min_offset = 100.0;
+        let max_offset = 200.0;
+        let f_num_trees = num_tree_textures as f32;
+
+        let mut rng = rand::thread_rng();
+        for _ in 0..num_trees {
+            let mut background_index: f32 = rng.gen();
+            background_index = background_index * f_num_trees;
+
+            let mut tree = objects::BackgroundObject {
+                background_index: background_index as usize,
+                transform: core::Transform::new()
+            };
+
+            let mut size: f32 = rng.gen();
+            size = 1.0 - size * 0.4;
+
+            tree.transform
+                .set_translation_2d_f(tree_offset, main_state.player.border().y)
+                .set_anchor_2d_f(0.0, 0.5)
+                .set_size_2d(&(main_state.tree_textures[tree.background_index].dimensions_f() * size))
+                .set_scale_2d_f(if rand::random() { -1.0 } else { 1.0 }, 1.0);
+
+            let random_offset: f32 = rng.gen();
+            tree_offset += min_offset + (max_offset - min_offset) * random_offset;
+
+            main_state.trees.push(tree);
+        }
 
         main_state.camera
             .set_orthographic(true)
@@ -146,6 +212,26 @@ impl core::GameState for MainState {
             &mut fullscreen_transform,
             &mut self.background_shader,
             &Vec::new());
+
+        for it in self.backgrounds.iter_mut() {
+            command_buffer.draw_into_target(
+                &mut target,
+                &mut self.camera,
+                &self.quad,
+                &mut it.transform,
+                &mut self.shader,
+                &vec![&self.background_textures[it.background_index]]);
+        }
+
+        for it in self.trees.iter_mut() {
+            command_buffer.draw_into_target(
+                &mut target,
+                &mut self.camera,
+                &self.quad,
+                &mut it.transform,
+                &mut self.tree_shader,
+                &vec![&self.tree_textures[it.background_index]]);
+        }
 
         // Render player
 

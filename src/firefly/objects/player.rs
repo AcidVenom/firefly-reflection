@@ -58,6 +58,10 @@ impl Player {
         &mut self.transform
     }
 
+    pub fn border(&self) -> nalgebra_glm::Vec2 {
+        self.border
+    }
+
     fn update_animations(&mut self, dt: f32) {
 
         // Variables

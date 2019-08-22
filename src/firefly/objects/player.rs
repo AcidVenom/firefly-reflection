@@ -37,7 +37,7 @@ impl Player {
             velocity: nalgebra_glm::vec2(0.0, 0.0),
             grounded: false,
             hop_force: 300.0,
-            acceleration: 1500.0,
+            acceleration: 1000.0,
             squish_timer: 1.0,
             border: nalgebra_glm::vec2(-700.0, -300.0)
         };
@@ -160,7 +160,7 @@ impl Player {
     }
 
     pub fn clamp_velocity(&mut self) {
-        let max_speed = 300.0;
+        let max_speed = 220.0;
         let max_fall_speed = 2000.0;
 
         self.velocity = nalgebra_glm::clamp_vec(

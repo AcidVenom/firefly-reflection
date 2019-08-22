@@ -55,7 +55,7 @@ impl MainState {
             tree_textures: Vec::new()
         };
 
-        let num_backgrounds = 1;
+        let num_backgrounds = 4;
         let background_offset = main_state.player.border().y + 160.0;
 
         for i in 0..num_backgrounds {
@@ -79,10 +79,10 @@ impl MainState {
                 gfx::Texture2D::from_image(display, &format!("assets/textures/trees/{}.png", i)[..]).with_nearest_filter());
         }
 
-        let num_trees = 50;
+        let num_trees = 80;
         let mut tree_offset = 300.0;
-        let min_offset = 100.0;
-        let max_offset = 200.0;
+        let min_offset = 10.0;
+        let max_offset = 30.0;
         let f_num_trees = num_tree_textures as f32;
 
         let mut rng = rand::thread_rng();
@@ -213,16 +213,6 @@ impl core::GameState for MainState {
             &mut self.background_shader,
             &Vec::new());
 
-        for it in self.backgrounds.iter_mut() {
-            command_buffer.draw_into_target(
-                &mut target,
-                &mut self.camera,
-                &self.quad,
-                &mut it.transform,
-                &mut self.shader,
-                &vec![&self.background_textures[it.background_index]]);
-        }
-
         for it in self.trees.iter_mut() {
             command_buffer.draw_into_target(
                 &mut target,
@@ -231,6 +221,16 @@ impl core::GameState for MainState {
                 &mut it.transform,
                 &mut self.tree_shader,
                 &vec![&self.tree_textures[it.background_index]]);
+        }
+
+        for it in self.backgrounds.iter_mut() {
+            command_buffer.draw_into_target(
+                &mut target,
+                &mut self.camera,
+                &self.quad,
+                &mut it.transform,
+                &mut self.shader,
+                &vec![&self.background_textures[it.background_index]]);
         }
 
         // Render player

@@ -12,7 +12,7 @@ mod snuff;
 mod firefly;
 
 fn main() {
-    let mut game_loop = snuff::core::GameLoop::new(1280, 720, "Firefly - Reflection", true);
+    let mut game_loop = snuff::core::GameLoop::new(1280, 720, "Firefly - Reflection", false);
 
     let window = game_loop.window();
 

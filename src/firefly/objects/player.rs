@@ -4,7 +4,8 @@ use crate::firefly::objects;
 
 enum PlayerState {
     Initial,
-    User
+    User,
+    End
 }
 
 pub struct Player {
@@ -16,7 +17,7 @@ pub struct Player {
     hop_force: f32,
     acceleration: f32,
     squish_timer: f32,
-    border: nalgebra_glm::Vec2
+    border: nalgebra_glm::Vec3
 }
 
 impl objects::GameObject for Player {
@@ -39,7 +40,7 @@ impl Player {
             hop_force: 300.0,
             acceleration: 1000.0,
             squish_timer: 1.0,
-            border: nalgebra_glm::vec2(-700.0, -300.0)
+            border: nalgebra_glm::vec3(-700.0, -300.0, 7300.0)
         };
 
         player.transform
@@ -58,7 +59,7 @@ impl Player {
         &mut self.transform
     }
 
-    pub fn border(&self) -> nalgebra_glm::Vec2 {
+    pub fn border(&self) -> nalgebra_glm::Vec3 {
         self.border
     }
 
@@ -142,10 +143,16 @@ impl Player {
             self.squish_timer = 0.0;
         }
 
-        // And that we cannot walk too far back..
+        // And that we cannot walk too far back or forward..
         if t.x < self.border.x {
             t.x = self.border.x;
             self.velocity.x = -self.velocity.x;
+        }
+        
+        if t.x > self.border.z {
+            t.x = self.border.z;
+            self.velocity.x = 0.0;
+            self.state = PlayerState::End;
         }
 
         if self.grounded {
@@ -196,7 +203,8 @@ impl Player {
             PlayerState::User => {
                 // Input
                 self.update_input(window);
-            }
+            },
+            PlayerState::End => {}
         }
 
         // Clamp before end of frame

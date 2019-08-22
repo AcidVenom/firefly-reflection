@@ -55,7 +55,7 @@ impl MainState {
             tree_textures: Vec::new()
         };
 
-        let num_backgrounds = 4;
+        let num_backgrounds = 7;
         let background_offset = main_state.player.border().y + 160.0;
 
         for i in 0..num_backgrounds {

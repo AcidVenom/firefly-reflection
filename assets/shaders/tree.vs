@@ -13,7 +13,7 @@ uniform mat4 projection;
 void main() 
 {
     mat4 parallax = view;
-    parallax[3][0] = (parallax[3][0] - 600.0) * model[0][0] / 500.0;
+    parallax[3][0] = (parallax[3][0] - 1280.0) * model[0][0] / 600.0;
     vec4 world_pos = model * vec4(position, 0.0, 1.0);
     vec2 pos = position;
     float wind_factor = uv.y * sin(time * 3.0 + sin(world_pos.x * 0.01));

@@ -20,6 +20,7 @@ pub struct MainState {
     fullscreen_shader: gfx::ShaderProgram,
     shader: gfx::ShaderProgram,
     tree_shader: gfx::ShaderProgram,
+    widget_shader: gfx::ShaderProgram,
     fade: f32,
     fade_timer: f32,
     fade_from: f32,
@@ -28,7 +29,10 @@ pub struct MainState {
     backgrounds: Vec<objects::BackgroundObject>,
     background_textures: Vec<gfx::Texture2D>,
     trees: Vec<objects::BackgroundObject>,
-    tree_textures: Vec<gfx::Texture2D>
+    tree_textures: Vec<gfx::Texture2D>,
+    text_textures: Vec<gfx::Texture2D>,
+    text_timer: f32,
+    current_text: usize
 }
 
 impl MainState {
@@ -44,6 +48,7 @@ impl MainState {
             fullscreen_shader: gfx::ShaderProgram::from_source(display, "assets/shaders/fullscreen.vs".to_string(), "assets/shaders/fullscreen.fs".to_string()).unwrap(),
             shader: gfx::ShaderProgram::from_source(display, "assets/shaders/simple.vs".to_string(), "assets/shaders/simple.fs".to_string()).unwrap(),
             tree_shader: gfx::ShaderProgram::from_source(display, "assets/shaders/tree.vs".to_string(), "assets/shaders/simple.fs".to_string()).unwrap(),
+            widget_shader: gfx::ShaderProgram::from_source(display, "assets/shaders/widget.vs".to_string(), "assets/shaders/widget.fs".to_string()).unwrap(),
             fade: 1.0,
             fade_timer: 0.0,
             fade_from: 1.0,
@@ -52,7 +57,10 @@ impl MainState {
             backgrounds: Vec::new(),
             background_textures: Vec::new(),
             trees: Vec::new(),
-            tree_textures: Vec::new()
+            tree_textures: Vec::new(),
+            text_textures: Vec::new(),
+            text_timer: 0.0,
+            current_text: 0
         };
 
         let num_backgrounds = 7;
@@ -77,6 +85,12 @@ impl MainState {
         for i in 0..num_tree_textures {
             main_state.tree_textures.push(
                 gfx::Texture2D::from_image(display, &format!("assets/textures/trees/{}.png", i)[..]).with_nearest_filter());
+        }
+
+        let num_text_textures = 16;
+        for i in 0..num_text_textures {
+            main_state.text_textures.push(
+                gfx::Texture2D::from_image(display, &format!("assets/textures/story/{}.png", i)[..]).with_nearest_filter());
         }
 
         let num_trees = 80;
@@ -187,6 +201,11 @@ impl core::GameState for MainState {
         self.update_fade(dt);
         self.player.update(dt, window);
 
+        if self.player.transform().translation().x - 640.0 > self.current_text as f32 * 1280.0 {
+            self.text_timer = 0.0;
+            self.current_text += 1;
+        }
+
         // Follow a point around with the camera
 
         let mut t = self.camera.transform().translation_2d();
@@ -194,12 +213,26 @@ impl core::GameState for MainState {
         t.x = t.x.max(0.0);
         self.camera.transform().set_translation_2d(&t);
 
+        // Text
+
+        let text_duration = 5.0;
+        if self.text_timer < 1.0 {
+            self.text_timer += dt * (1.0 / text_duration);
+            self.text_timer = self.text_timer.min(1.0);
+        }
+
         None
     }
 
     fn draw(&mut self, command_buffer: &mut gfx::CommandBuffer, _dt: f32) {
 
         let mut fullscreen_transform = core::Transform::new();
+        let mut text_transform = core::Transform::new();
+
+        let text_ease = core::easing::out_cubic(self.text_timer);
+        text_transform
+            .set_size_2d(&self.text_textures[0].dimensions_f())
+            .set_translation_2d_f(0.0, 170.0 + 30.0 * text_ease);
 
         // Draw background
         let mut target = command_buffer.render_target(vec![&self.color_target]);
@@ -250,6 +283,13 @@ impl core::GameState for MainState {
             &mut self.camera,
             &mut self.fullscreen_shader, 
             &vec![&self.color_target]);
+
+        // Render texts
+        if self.current_text < self.text_textures.len() {
+            let c = (self.text_timer * 3.14159).sin();
+            command_buffer.set_blend_color(1.0, 1.0, 1.0, c);
+            command_buffer.draw(&mut self.camera, &self.quad, &mut text_transform, &mut self.widget_shader, &vec![&self.text_textures[self.current_text]]);
+        }
     }
 
     fn on_leave(&mut self) {

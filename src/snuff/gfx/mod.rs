@@ -4,6 +4,7 @@ mod shapes;
 mod texture;
 
 pub use {
-    command_buffer::CommandBuffer, shader_program::ShaderProgram, shapes::Mesh, shapes::Vertex2D,
+    command_buffer::CommandBuffer, command_buffer::RenderTarget,
+    shader_program::ShaderProgram, shapes::Mesh, shapes::Vertex2D,
     texture::Texture2D,
 };

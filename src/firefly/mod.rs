@@ -1,6 +1,8 @@
 mod states;
+mod objects;
 
 pub use {
     states::MenuState,
-    states::MainState
+    states::MainState,
+    objects::Player
 };

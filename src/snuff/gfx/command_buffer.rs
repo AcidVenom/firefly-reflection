@@ -121,7 +121,7 @@ impl<'a> CommandBuffer<'a> {
                     },
                     alpha: glium::BlendingFunction::Addition {
                         source: glium::LinearBlendingFactor::One,
-                        destination: glium::LinearBlendingFactor::Zero
+                        destination: glium::LinearBlendingFactor::One
                     },
                     constant_value: (0.0, 0.0, 0.0, 0.0)
                 },

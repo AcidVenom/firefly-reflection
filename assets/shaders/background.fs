@@ -58,7 +58,7 @@ float snoise(vec2 v)
 
 vec3 gradient(vec2 screen_pos, vec2 screen_size)
 {
-    const float halo_offset = -100.0;
+    const float halo_offset = -80.0;
 
     float y_pos = (-view[3][1] + halo_offset + screen_pos.y) / screen_size.y;
     y_pos = max(0.0, min(y_pos, 1.0));

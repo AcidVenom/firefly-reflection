@@ -2,6 +2,7 @@ use crate::snuff::core;
 use crate::snuff::gfx;
 use crate::firefly::objects;
 
+#[derive(PartialEq)]
 enum PlayerState {
     Initial,
     User,
@@ -61,6 +62,10 @@ impl Player {
 
     pub fn border(&self) -> nalgebra_glm::Vec3 {
         self.border
+    }
+
+    pub fn is_at_end(&self) -> bool {
+        return self.state == PlayerState::End;
     }
 
     fn update_animations(&mut self, dt: f32) {
@@ -167,7 +172,7 @@ impl Player {
     }
 
     pub fn clamp_velocity(&mut self) {
-        let max_speed = 220.0;
+        let max_speed = 200.0;
         let max_fall_speed = 2000.0;
 
         self.velocity = nalgebra_glm::clamp_vec(

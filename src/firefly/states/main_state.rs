@@ -4,6 +4,9 @@ use crate::firefly::objects;
 use crate::firefly::objects::GameObject;
 use rand::prelude::*;
 
+use std::fs::File;
+use std::io::BufReader;
+
 #[derive(PartialEq)]
 enum FadeMode {
     In,
@@ -32,12 +35,18 @@ pub struct MainState {
     tree_textures: Vec<gfx::Texture2D>,
     text_textures: Vec<gfx::Texture2D>,
     text_timer: f32,
-    current_text: usize
+    current_text: usize,
+    music_sink: rodio::Sink,
+    rain_sink: rodio::Sink,
+    first_frame: bool,
+    audio_swapped: bool,
+    raininess: f32
 }
 
 impl MainState {
     pub fn new(window: &mut core::Window) -> MainState {
         let display = window.display();
+        let audio_device = &rodio::default_output_device().unwrap();
 
         let mut main_state = MainState {
             camera: core::Camera::new(),
@@ -60,7 +69,12 @@ impl MainState {
             tree_textures: Vec::new(),
             text_textures: Vec::new(),
             text_timer: 0.0,
-            current_text: 0
+            current_text: 0,
+            music_sink: rodio::Sink::new(audio_device),
+            rain_sink: rodio::Sink::new(audio_device),
+            first_frame: true,
+            audio_swapped: false,
+            raininess: 1.0
         };
 
         let num_backgrounds = 7;
@@ -137,6 +151,30 @@ impl MainState {
     fn set_defaults(&mut self) {
         self.fade = 1.0;
         self.fade_in();
+
+        let audio_device = &rodio::default_output_device().unwrap();
+        
+        let audio_file = File::open("assets/audio/music_mid.mp3").unwrap();
+        let audio_source = rodio::Decoder::new(BufReader::new(audio_file)).unwrap();
+
+        self.music_sink = rodio::Sink::new(audio_device);
+        self.music_sink.append(audio_source);
+
+        let audio_file = File::open("assets/audio/rain.mp3").unwrap();
+        let audio_source = rodio::Decoder::new(BufReader::new(audio_file)).unwrap();
+
+        self.rain_sink = rodio::Sink::new(audio_device);
+        self.rain_sink.append(audio_source);
+    }
+
+    fn play_end_music(&mut self) {
+        let audio_file = File::open("assets/audio/music_end.mp3").unwrap();
+        let audio_source = rodio::Decoder::new(BufReader::new(audio_file)).unwrap();
+
+        self.music_sink = rodio::Sink::new(&rodio::default_output_device().unwrap());
+        self.music_sink.append(audio_source);
+
+        self.audio_swapped = true;
     }
 
     fn fade_in(&mut self) {
@@ -180,11 +218,22 @@ impl core::GameState for MainState {
 
     fn update(&mut self, dt: f32, window: &core::Window) -> Option<String> {
 
+        if self.first_frame == true {
+
+            self.music_sink.play();
+            self.rain_sink.play();
+
+            self.first_frame = false;
+            return None;
+        }
+
         // Variables
         let camera_damping = 100.0;
         let camera_offset = nalgebra_glm::vec2(0.0, 100.0);
 
         // Debug
+        
+        let dt = if window.is_key_down(glium::glutin::VirtualKeyCode::RBracket) { dt * 10.0 } else { dt };
 
         if window.is_key_released(glium::glutin::VirtualKeyCode::R) {
             return Some(String::from("MenuState"));
@@ -201,9 +250,31 @@ impl core::GameState for MainState {
         self.update_fade(dt);
         self.player.update(dt, window);
 
-        if self.player.transform().translation().x - 640.0 > self.current_text as f32 * 1280.0 {
+        let player_x = self.player.transform().translation().x;
+        let at_end = self.player.is_at_end();
+
+        if player_x - 640.0 > self.current_text as f32 * 1280.0 || at_end && self.text_timer >= 1.0 {
             self.text_timer = 0.0;
             self.current_text += 1;
+        }
+
+        // "Cross-fade" the audio
+        let border = self.player.border();
+        let volume_ratio = if at_end && self.current_text > 6 { 1.0 } else { 1.0 - ((player_x - border.x) / (border.z - border.x)).powf(2.0) };
+
+        if at_end && !self.audio_swapped && self.current_text > 6 {
+            self.play_end_music();
+        }
+
+        self.music_sink.set_volume(volume_ratio);
+
+        // Rain
+
+        if self.current_text >= 13 && self.raininess > 0.0 {
+            self.raininess -= dt * (1.0 / 14.0);
+            self.raininess = self.raininess.max(0.0);
+
+            self.rain_sink.set_volume(self.raininess);
         }
 
         // Follow a point around with the camera
@@ -215,7 +286,7 @@ impl core::GameState for MainState {
 
         // Text
 
-        let text_duration = 5.0;
+        let text_duration = 6.5;
         if self.text_timer < 1.0 {
             self.text_timer += dt * (1.0 / text_duration);
             self.text_timer = self.text_timer.min(1.0);
@@ -235,6 +306,7 @@ impl core::GameState for MainState {
             .set_translation_2d_f(0.0, 170.0 + 30.0 * text_ease);
 
         // Draw background
+        command_buffer.set_blend_color(1.0, 1.0, 1.0, self.raininess);
         let mut target = command_buffer.render_target(vec![&self.color_target]);
         command_buffer.clear(&mut target, 0.0, 0.0, 0.0, 0.0);
 
@@ -245,6 +317,11 @@ impl core::GameState for MainState {
             &mut fullscreen_transform,
             &mut self.background_shader,
             &Vec::new());
+
+        drop(target);
+
+        command_buffer.set_blend_color(1.0, 1.0, 1.0, 1.0);
+        let mut target = command_buffer.render_target(vec![&self.color_target]);
 
         for it in self.trees.iter_mut() {
             command_buffer.draw_into_target(

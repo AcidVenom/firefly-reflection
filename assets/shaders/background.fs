@@ -74,7 +74,7 @@ vec3 rain(vec3 base, vec2 screen_pos)
 {
     vec2 world_pos = screen_pos - vec2(view[3][0], view[3][1]);
     vec2 rain_pos = (world_pos + vec2(0.0, time * 1050.0)) * vec2(0.175, 0.0075);
-    float noise = min(max(0.0, pow(snoise(rain_pos), 0.75) - mix(4.0, 0.5, blend.a)), 1.0);
+    float noise = min(max(0.0, pow(snoise(rain_pos), 0.75) - mix(0.9, 0.5, blend.a)), 1.0);
 
     return mix(base, vec3(0.0), noise);
 }

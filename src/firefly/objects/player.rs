@@ -15,7 +15,8 @@ pub struct Player {
     grounded: bool,
     hop_force: f32,
     acceleration: f32,
-    squish_timer: f32
+    squish_timer: f32,
+    border: nalgebra_glm::Vec2
 }
 
 impl objects::GameObject for Player {
@@ -37,12 +38,13 @@ impl Player {
             grounded: false,
             hop_force: 300.0,
             acceleration: 1500.0,
-            squish_timer: 1.0
+            squish_timer: 1.0,
+            border: nalgebra_glm::vec2(-700.0, -300.0)
         };
 
         player.transform
             .set_size_2d(&player.texture.dimensions_f())
-            .set_translation_2d_f(-700.0, -300.0)
+            .set_translation_2d_f(player.border.x, player.border.y)
             .set_anchor_2d_f(0.0, 0.25);
 
         player
@@ -125,16 +127,21 @@ impl Player {
         // Variables
 
         let fall_speed = 1000.0;
-        let border = -300.0;
 
         let mut t = self.transform.translation_2d() + self.velocity * dt;
 
         // Make sure we don't fall through the ground..
-        if t.y <= border && !self.grounded {
-            t.y = border;
+        if t.y <= self.border.y && !self.grounded {
+            t.y = self.border.y;
             self.velocity.y = 0.0;
             self.grounded = true;
             self.squish_timer = 0.0;
+        }
+
+        // And that we cannot walk too far back..
+        if t.x < self.border.x {
+            t.x = self.border.x;
+            self.velocity.x = -self.velocity.x;
         }
 
         if self.grounded {

@@ -100,6 +100,10 @@ impl core::GameState for MainState {
 
     fn update(&mut self, dt: f32, window: &core::Window) -> Option<String> {
 
+        // Variables
+        let camera_damping = 100.0;
+        let camera_offset = nalgebra_glm::vec2(0.0, 100.0);
+
         // Debug
 
         if window.is_key_released(glium::glutin::VirtualKeyCode::R) {
@@ -116,6 +120,13 @@ impl core::GameState for MainState {
 
         self.update_fade(dt);
         self.player.update(dt, window);
+
+        // Follow a point around with the camera
+
+        let mut t = self.camera.transform().translation_2d();
+        t = nalgebra_glm::lerp(&t, &(self.player.transform().translation_2d() + camera_offset), 1.0 - f32::powf(1.0 / camera_damping, dt));
+        t.x = t.x.max(0.0);
+        self.camera.transform().set_translation_2d(&t);
 
         None
     }

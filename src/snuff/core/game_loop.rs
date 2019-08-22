@@ -53,11 +53,6 @@ impl GameLoop {
     }
 
     //---------------------------------------------------------------------------------------------------
-    fn draw(&mut self, time: f32, dt: f32) {
-        
-    }
-
-    //---------------------------------------------------------------------------------------------------
     fn tick(&mut self, time: f32, dt: f32) {
         let game_state_manager = &mut self.game_state_manager;
         let current_state = game_state_manager.get_current_state();

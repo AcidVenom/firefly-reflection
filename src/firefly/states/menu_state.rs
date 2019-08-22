@@ -117,6 +117,9 @@ impl core::GameState for MenuState {
             self.set_defaults();
             return None;
         }
+        else if window.is_key_released(glium::glutin::VirtualKeyCode::Space) {
+            return Some(String::from("MainState"));
+        }
         
         // Variables
 
@@ -182,7 +185,7 @@ impl core::GameState for MenuState {
         None
     }
 
-    fn draw(&mut self, command_buffer: &mut gfx::CommandBuffer, dt: f32) {
+    fn draw(&mut self, command_buffer: &mut gfx::CommandBuffer, _dt: f32) {
 
         // Variables
 

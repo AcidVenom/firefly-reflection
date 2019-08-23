@@ -40,7 +40,10 @@ pub struct MainState {
     rain_sink: rodio::Sink,
     first_frame: bool,
     audio_swapped: bool,
-    raininess: f32
+    raininess: f32,
+    firefly: objects::Firefly,
+    end_offset: f32,
+    color_blend_in: f32
 }
 
 impl MainState {
@@ -74,7 +77,10 @@ impl MainState {
             rain_sink: rodio::Sink::new(audio_device),
             first_frame: true,
             audio_swapped: false,
-            raininess: 1.0
+            raininess: 1.0,
+            firefly: objects::Firefly::new(display),
+            end_offset: 0.0,
+            color_blend_in: 0.0
         };
 
         let num_backgrounds = 7;
@@ -227,10 +233,6 @@ impl core::GameState for MainState {
             return None;
         }
 
-        // Variables
-        let camera_damping = 100.0;
-        let camera_offset = nalgebra_glm::vec2(0.0, 100.0);
-
         // Debug
         
         let dt = if window.is_key_down(glium::glutin::VirtualKeyCode::RBracket) { dt * 10.0 } else { dt };
@@ -249,9 +251,14 @@ impl core::GameState for MainState {
 
         self.update_fade(dt);
         self.player.update(dt, window);
+        self.firefly.update(self.player.transform(), self.end_offset, dt);
 
         let player_x = self.player.transform().translation().x;
         let at_end = self.player.is_at_end();
+
+        if at_end {
+            self.end_offset += dt * 14.0;
+        }
 
         if player_x - 640.0 > self.current_text as f32 * 1280.0 || at_end && self.text_timer >= 1.0 {
             self.text_timer = 0.0;
@@ -277,7 +284,17 @@ impl core::GameState for MainState {
             self.rain_sink.set_volume(self.raininess);
         }
 
+        // Color
+
+        if self.current_text >= 14 && self.color_blend_in < 1.0 {
+            self.color_blend_in += dt;
+            self.color_blend_in = self.color_blend_in.min(1.0);
+        }
+
         // Follow a point around with the camera
+
+        let camera_damping = 100.0;
+        let camera_offset = nalgebra_glm::vec2(0.0, 100.0 + self.end_offset);
 
         let mut t = self.camera.transform().translation_2d();
         t = nalgebra_glm::lerp(&t, &(self.player.transform().translation_2d() + camera_offset), 1.0 - f32::powf(1.0 / camera_damping, dt));
@@ -306,7 +323,7 @@ impl core::GameState for MainState {
             .set_translation_2d_f(0.0, 170.0 + 30.0 * text_ease);
 
         // Draw background
-        command_buffer.set_blend_color(1.0, 1.0, 1.0, self.raininess);
+        command_buffer.set_blend_color(self.color_blend_in, 1.0, 1.0, self.raininess);
         let mut target = command_buffer.render_target(vec![&self.color_target]);
         command_buffer.clear(&mut target, 0.0, 0.0, 0.0, 0.0);
 
@@ -346,6 +363,16 @@ impl core::GameState for MainState {
         // Render player
 
         let render_data = self.player.render_data();
+        command_buffer.draw_into_target(
+            &mut target,
+            &mut self.camera,
+            &self.quad,
+            render_data.transform,
+            &mut self.shader,
+            &render_data.textures);
+
+        // Render firefly
+        let render_data = self.firefly.render_data();
         command_buffer.draw_into_target(
             &mut target,
             &mut self.camera,
